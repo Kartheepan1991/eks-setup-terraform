@@ -8,7 +8,7 @@ set -e
 # Variables - Customize these for your environment
 BUCKET_NAME="my-terraform-state-eks-$(date +%s)"
 DYNAMODB_TABLE="terraform-state-lock"
-REGION="us-west-2"
+REGION="eu-west-2"
 
 echo "Setting up Terraform backend infrastructure..."
 echo "Bucket: $BUCKET_NAME"

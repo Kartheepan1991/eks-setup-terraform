@@ -41,17 +41,13 @@ module "vpc" {
   enable_dns_hostnames  = true
   enable_dns_support    = true
 
-  # Calculate subnet CIDRs automatically
+  # Calculate subnet CIDRs automatically for single zone
   private_subnet_cidrs = [
-    cidrsubnet(var.vpc_cidr, 8, 1),
-    cidrsubnet(var.vpc_cidr, 8, 2),
-    cidrsubnet(var.vpc_cidr, 8, 3)
+    cidrsubnet(var.vpc_cidr, 8, 1)
   ]
   
   public_subnet_cidrs = [
-    cidrsubnet(var.vpc_cidr, 8, 101),
-    cidrsubnet(var.vpc_cidr, 8, 102),
-    cidrsubnet(var.vpc_cidr, 8, 103)
+    cidrsubnet(var.vpc_cidr, 8, 101)
   ]
 
   tags = var.common_tags

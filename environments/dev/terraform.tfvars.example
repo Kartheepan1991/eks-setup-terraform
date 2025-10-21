@@ -2,14 +2,14 @@
 # Copy this file to terraform.tfvars and customize the values
 
 # AWS Configuration
-aws_region = "us-west-2"
+aws_region = "eu-west-2"
 environment = "dev"
 project_name = "eks-learning"
 
 # VPC Configuration
 vpc_cidr = "10.0.0.0/16"
-availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
-enable_nat_gateway = true
+availability_zones = ["eu-west-2a"]
+enable_nat_gateway = false
 
 # EKS Configuration
 cluster_version = "1.28"

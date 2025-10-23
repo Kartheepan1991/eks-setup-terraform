@@ -6,7 +6,7 @@ terraform {
     # Replace these values with the output from setup-backend.sh
     bucket         = "your-terraform-state-bucket-name"
     key            = "environments/dev/terraform.tfstate"
-    region         = "eu-west-2"
+    region         = "ap-southeast-1"
     dynamodb_table = "terraform-state-lock"
     encrypt        = true
   }

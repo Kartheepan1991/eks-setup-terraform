@@ -4,7 +4,7 @@
 variable "aws_region" {
   description = "AWS region for all resources"
   type        = string
-  default     = "eu-west-2"
+  default     = "ap-southeast-1"
 }
 
 variable "environment" {
@@ -34,7 +34,7 @@ variable "vpc_cidr" {
 variable "availability_zones" {
   description = "List of availability zones"
   type        = list(string)
-  default     = ["eu-west-2a"]
+  default     = ["ap-southeast-1a"]
 }
 
 variable "enable_nat_gateway" {

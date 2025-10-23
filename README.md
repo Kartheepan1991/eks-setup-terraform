@@ -5,35 +5,49 @@ This project creates a production-ready Amazon EKS (Elastic Kubernetes Service) 
 ## 🏗️ Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        VPC (10.0.0.0/16)                   │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────┐ │
-│  │   Public AZ-A   │  │   Public AZ-B   │  │ Public AZ-C  │ │
-│  │  10.0.101.0/24  │  │  10.0.102.0/24  │  │10.0.103.0/24 │ │
-│  │                 │  │                 │  │              │ │
-│  │  ┌──────────┐   │  │  ┌──────────┐   │  │ ┌──────────┐ │ │
-│  │  │    NAT   │   │  │  │    NAT   │   │  │ │    NAT   │ │ │
-│  │  │ Gateway  │   │  │  │ Gateway  │   │  │ │ Gateway  │ │ │
-│  │  └──────────┘   │  │  └──────────┘   │  │ └──────────┘ │ │
-│  └─────────────────┘  └─────────────────┘  └──────────────┘ │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────┐ │
-│  │  Private AZ-A   │  │  Private AZ-B   │  │ Private AZ-C │ │
-│  │  10.0.1.0/24    │  │  10.0.2.0/24    │  │ 10.0.3.0/24  │ │
-│  │                 │  │                 │  │              │ │
-│  │ ┌─────────────┐ │  │ ┌─────────────┐ │  │┌─────────────┐│ │
-│  │ │EKS Worker   │ │  │ │EKS Worker   │ │  ││EKS Worker   ││ │
-│  │ │Nodes        │ │  │ │Nodes        │ │  ││Nodes        ││ │
-│  │ └─────────────┘ │  │ └─────────────┘ │  │└─────────────┘│ │
-│  └─────────────────┘  └─────────────────┘  └──────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-                    │
-                    ▼
-              ┌─────────────┐
-              │ EKS Control │
-              │    Plane    │
-              │  (Managed)  │
-              └─────────────┘
+┌───────────────────────────────────────────────────────────┐
+│              VPC (10.0.0.0/16) - ap-southeast-1           │
+│  ┌────────────────────────┐  ┌────────────────────────┐   │
+│  │   Public Subnet AZ-A   │  │   Public Subnet AZ-B   │   │
+│  │    10.0.101.0/24       │  │    10.0.102.0/24       │   │
+│  │  ┌──────────────────┐  │  │  ┌──────────────────┐  │   │
+│  │  │  NAT Gateway     │  │  │  │  NAT Gateway     │  │   │
+│  │  │  (Internet GW)   │  │  │  │  (Internet GW)   │  │   │
+│  │  └──────────────────┘  │  │  └──────────────────┘  │   │
+│  └────────────────────────┘  └────────────────────────┘   │
+│                                                            │
+│  ┌────────────────────────┐  ┌────────────────────────┐   │
+│  │  Private Subnet AZ-A   │  │  Private Subnet AZ-B   │   │
+│  │    10.0.1.0/24         │  │    10.0.2.0/24         │   │
+│  │                        │  │                        │   │
+│  │  ┌──────────────────┐  │  │  ┌──────────────────┐  │   │
+│  │  │  EKS Worker      │  │  │  │  EKS Worker      │  │   │
+│  │  │  Nodes (t3.small)│  │  │  │  Nodes (Ready)   │  │   │
+│  │  │  - aws-node CNI  │  │  │  │                  │  │   │
+│  │  │  - kube-proxy    │  │  │  │                  │  │   │
+│  │  └──────────────────┘  │  │  └──────────────────┘  │   │
+│  └────────────────────────┘  └────────────────────────┘   │
+│                          ▲                                 │
+│                          │                                 │
+│                   VPC Endpoint (S3)                        │
+└───────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+                  ┌─────────────────┐
+                  │  EKS Control    │
+                  │  Plane (v1.28)  │
+                  │  - Multi-AZ HA  │
+                  │  - OIDC Enabled │
+                  └─────────────────┘
 ```
+
+**Key Architecture Points:**
+- **Region:** ap-southeast-1 (Singapore)
+- **Availability Zones:** 2 (ap-southeast-1a, ap-southeast-1b)
+- **VPC CIDR:** 10.0.0.0/16
+- **NAT Gateways:** 2 (one per AZ for high availability)
+- **Node Group:** 1 t3.small instance
+- **Kubernetes Version:** 1.28
 
 ## 📁 Project Structure
 
@@ -103,10 +117,16 @@ terraform apply
 
 ```bash
 # Update kubeconfig
-aws eks update-kubeconfig --region us-west-2 --name eks-learning-dev
+aws eks update-kubeconfig --region ap-southeast-1 --name kartheepan-eks-dev
 
 # Verify cluster access
 kubectl get nodes
+
+# Check all pods
+kubectl get pods --all-namespaces
+
+# View cluster information
+kubectl cluster-info
 ```
 
 ## 🧩 Modules Explained
@@ -121,10 +141,11 @@ Creates a production-ready VPC with:
 - **Proper tagging** for EKS resource discovery
 
 **Key Features:**
-- Multi-AZ deployment for high availability
-- Automatic subnet CIDR calculation
+- **2 Availability Zones** (ap-southeast-1a, ap-southeast-1b) for high availability
+- Automatic subnet CIDR calculation (10.0.1.0/24, 10.0.2.0/24 for private)
 - EKS-specific tags for load balancer subnet discovery
-- VPC endpoints for cost optimization
+- VPC endpoints for S3 to reduce data transfer costs
+- NAT Gateways in public subnets for private subnet internet access
 
 ### EKS Module (`modules/eks/`)
 
@@ -145,27 +166,30 @@ Creates a secure EKS cluster with:
 
 ### Node Groups
 
-The project creates two node groups by default:
+The project creates a managed node group:
 
 1. **General Node Group**
-   - On-demand instances (t3.medium)
-   - 2 desired, 1-4 min-max capacity
-   - For production workloads
+   - On-demand instances (t3.small)
+   - 1 desired, 1-2 min-max capacity
+   - Deployed across 2 availability zones
+   - 20GB EBS storage per node
+   - Suitable for learning and CKA practice
 
-2. **Spot Node Group**
-   - Spot instances (t3.medium, t3.large)
-   - 1 desired, 0-3 min-max capacity
-   - For cost-effective non-critical workloads
-   - Includes taint for spot instances
+**Current Configuration:**
+- **Instance Type:** t3.small (2 vCPU, 2GB RAM)
+- **AMI Type:** Amazon Linux 2 (AL2_x86_64)
+- **Disk Size:** 20GB
+- **Scaling:** Min 1, Max 2, Desired 1
 
 ### Customization
 
-Modify `environments/dev/variables.tf` to customize:
-- Instance types and sizes
-- Node group configurations
-- Network CIDR blocks
-- Kubernetes version
-- Resource tags
+Modify `environments/dev/terraform.tfvars` to customize:
+- **Region and AZs:** Change `aws_region` and `availability_zones`
+- **Instance types:** Update `instance_types` in node_groups
+- **Network CIDR:** Modify `vpc_cidr` (default: 10.0.0.0/16)
+- **Kubernetes version:** Change `cluster_version` (current: 1.28)
+- **Resource tags:** Update tags for cost tracking and organization
+- **NAT Gateway:** Enable/disable with `enable_nat_gateway` (required for EKS)
 
 ## 🛡️ Security Best Practices
 

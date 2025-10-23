@@ -4,7 +4,7 @@
 variable "aws_region" {
   description = "AWS region for all resources"
   type        = string
-  default     = "us-west-2"
+  default     = "ap-southeast-1"
 }
 
 variable "environment" {
@@ -34,13 +34,13 @@ variable "vpc_cidr" {
 variable "availability_zones" {
   description = "List of availability zones"
   type        = list(string)
-  default     = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  default     = ["ap-southeast-1a", "ap-southeast-1b"]
 }
 
 variable "enable_nat_gateway" {
   description = "Enable NAT Gateway for private subnets"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "node_groups" {
@@ -62,10 +62,10 @@ variable "node_groups" {
   }))
   default = {
     general = {
-      desired_capacity = 2
-      max_capacity     = 4
+      desired_capacity = 1
+      max_capacity     = 2
       min_capacity     = 1
-      instance_types   = ["t3.medium"]
+      instance_types   = ["t3.small"]
       capacity_type    = "ON_DEMAND"
       disk_size        = 20
       ami_type         = "AL2_x86_64"
@@ -74,24 +74,6 @@ variable "node_groups" {
         environment = "dev"
       }
       taints = []
-    }
-    spot = {
-      desired_capacity = 1
-      max_capacity     = 3
-      min_capacity     = 0
-      instance_types   = ["t3.medium", "t3.large"]
-      capacity_type    = "SPOT"
-      disk_size        = 20
-      ami_type         = "AL2_x86_64"
-      labels = {
-        role = "spot"
-        environment = "dev"
-      }
-      taints = [{
-        key    = "spot"
-        value  = "true"
-        effect = "NO_SCHEDULE"
-      }]
     }
   }
 }

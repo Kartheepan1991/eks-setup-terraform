@@ -4,9 +4,9 @@
 terraform {
   backend "s3" {
     # Replace these values with the output from setup-backend.sh
-    bucket         = "your-terraform-state-bucket-name"
+    bucket         = "my-terraform-state-eks-1761190037"
     key            = "environments/dev/terraform.tfstate"
-    region         = "us-west-2"
+    region         = "ap-southeast-1"
     dynamodb_table = "terraform-state-lock"
     encrypt        = true
   }

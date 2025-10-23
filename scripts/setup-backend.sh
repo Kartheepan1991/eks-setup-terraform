@@ -8,7 +8,7 @@ set -e
 # Variables - Customize these for your environment
 BUCKET_NAME="my-terraform-state-eks-$(date +%s)"
 DYNAMODB_TABLE="terraform-state-lock"
-REGION="us-west-2"
+REGION="ap-southeast-1"
 
 echo "Setting up Terraform backend infrastructure..."
 echo "Bucket: $BUCKET_NAME"
@@ -46,11 +46,7 @@ aws s3api put-bucket-encryption \
 echo "Configuring S3 bucket to block public access..."
 aws s3api put-public-access-block \
     --bucket $BUCKET_NAME \
-    --public-access-block-configuration \
-        BlockPublicAcls=true,\
-        IgnorePublicAcls=true,\
-        BlockPublicPolicy=true,\
-        RestrictPublicBuckets=true
+    --public-access-block-configuration "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
 
 # Create DynamoDB table for state locking
 echo "Creating DynamoDB table for state locking..."

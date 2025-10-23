@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 # Cleanup script for EKS Terraform project

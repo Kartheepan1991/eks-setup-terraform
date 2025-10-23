@@ -8,7 +8,7 @@ project_name = "eks-learning"
 
 # VPC Configuration
 vpc_cidr = "10.0.0.0/16"
-availability_zones = ["ap-southeast-1a"]
+availability_zones = ["ap-southeast-1a", "ap-southeast-1b"]
 enable_nat_gateway = false
 
 # EKS Configuration

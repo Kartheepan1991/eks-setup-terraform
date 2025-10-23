@@ -41,13 +41,15 @@ module "vpc" {
   enable_dns_hostnames  = true
   enable_dns_support    = true
 
-  # Calculate subnet CIDRs automatically for single zone
+  # Calculate subnet CIDRs automatically for 2 zones (minimum for EKS)
   private_subnet_cidrs = [
-    cidrsubnet(var.vpc_cidr, 8, 1)
+    cidrsubnet(var.vpc_cidr, 8, 1),
+    cidrsubnet(var.vpc_cidr, 8, 2)
   ]
   
   public_subnet_cidrs = [
-    cidrsubnet(var.vpc_cidr, 8, 101)
+    cidrsubnet(var.vpc_cidr, 8, 101),
+    cidrsubnet(var.vpc_cidr, 8, 102)
   ]
 
   tags = var.common_tags

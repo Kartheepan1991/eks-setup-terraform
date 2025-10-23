@@ -46,11 +46,7 @@ aws s3api put-bucket-encryption \
 echo "Configuring S3 bucket to block public access..."
 aws s3api put-public-access-block \
     --bucket $BUCKET_NAME \
-    --public-access-block-configuration \
-        BlockPublicAcls=true,\
-        IgnorePublicAcls=true,\
-        BlockPublicPolicy=true,\
-        RestrictPublicBuckets=true
+    --public-access-block-configuration "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
 
 # Create DynamoDB table for state locking
 echo "Creating DynamoDB table for state locking..."

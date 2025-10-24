@@ -58,26 +58,4 @@ output "public_route_table_id" {
 
 output "private_route_table_ids" {
   description = "List of IDs of the private route tables"
-  value       = aws_route_table.private[*].id
-}
-
-output "availability_zones" {
-  description = "List of availability zones used"
-  value       = var.availability_zones
-}
-
-output "vpc_endpoint_s3_id" {
-  description = "ID of the S3 VPC endpoint"
-  value       = aws_vpc_endpoint.s3.id
-}
-
-# Outputs specifically for EKS cluster
-output "cluster_subnet_ids" {
-  description = "List of subnet IDs for EKS cluster (both public and private)"
-  value       = concat(aws_subnet.public[*].id, aws_subnet.private[*].id)
-}
-
-output "worker_subnet_ids" {
-  description = "List of subnet IDs for EKS worker nodes (private subnets)"
-  value       = aws_subnet.private[*].id
-}
+# ...existing code continues...

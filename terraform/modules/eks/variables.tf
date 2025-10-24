@@ -58,46 +58,4 @@ variable "log_retention_days" {
 }
 
 # Node Group Variables
-variable "node_groups" {
-  description = "Map of EKS managed node group definitions"
-  type = map(object({
-    desired_capacity    = number
-    max_capacity       = number
-    min_capacity       = number
-    instance_types     = list(string)
-    capacity_type      = string
-    disk_size          = number
-    ami_type           = string
-    labels             = map(string)
-    taints = list(object({
-      key    = string
-      value  = string
-      effect = string
-    }))
-  }))
-  default = {
-    general = {
-      desired_capacity = 2
-      max_capacity     = 4
-      min_capacity     = 1
-      instance_types   = ["t3.medium"]
-      capacity_type    = "ON_DEMAND"
-      disk_size        = 20
-      ami_type         = "AL2_x86_64"
-      labels           = {}
-      taints           = []
-    }
-  }
-}
-
-variable "enable_cluster_autoscaler" {
-  description = "Enable cluster autoscaler tags on node groups"
-  type        = bool
-  default     = true
-}
-
-variable "tags" {
-  description = "A map of tags to assign to the resource"
-  type        = map(string)
-  default     = {}
-}
+# ...existing code continues...

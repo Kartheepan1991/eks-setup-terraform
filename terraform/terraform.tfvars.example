@@ -1,0 +1,61 @@
+# ...existing code from environments/dev/terraform.tfvars.example will be migrated here...
+ # Example Terraform variables file
+ # Copy this file to terraform.tfvars and customize the values
+ 
+ # AWS Configuration
+ aws_region = "ap-southeast-1"
+ environment = "dev"
+ project_name = "eks-learning"
+ 
+ # VPC Configuration
+ vpc_cidr = "10.0.0.0/16"
+ availability_zones = ["ap-southeast-1a", "ap-southeast-1b"]
+ enable_nat_gateway = false
+ 
+ # EKS Configuration
+ cluster_version = "1.28"
+ 
+ # Restrict API access to your IP for better security
+ # Get your IP with: curl https://ipinfo.io/ip
+ endpoint_public_access_cidrs = ["0.0.0.0/0"]  # Replace with your IP: ["YOUR_IP/32"]
+ 
+ # Node Groups Configuration
+ node_groups = {
+	 general = {
+		 desired_capacity = 2
+		 max_capacity     = 4
+		 min_capacity     = 1
+		 instance_types   = ["t3.medium"]
+		 capacity_type    = "ON_DEMAND"
+		 disk_size        = 20
+		 ami_type         = "AL2_x86_64"
+		 labels = {
+			 role = "general"
+			 environment = "dev"
+		 }
+		 taints = []
+	 }
+   
+	 # Optional: Spot instances for cost savings (good for learning)
+	 spot = {
+		 desired_capacity = 1
+		 max_capacity     = 3
+		 min_capacity     = 0
+		 instance_types   = ["t3.medium", "t3.large"]
+		 capacity_type    = "SPOT"
+		 disk_size        = 20
+		 ami_type         = "AL2_x86_64"
+		 labels = {
+			 role = "spot"
+			 environment = "dev"
+		 }
+		 taints = [{
+			 key    = "spot"
+			 value  = "true"
+			 effect = "NO_SCHEDULE"
+		 }]
+	 }
+ }
+ 
+ # Enable cluster autoscaler
+ enable_cluster_autoscaler = true

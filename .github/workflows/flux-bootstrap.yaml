@@ -1,0 +1,43 @@
+name: Flux Bootstrap to EKS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  flux-bootstrap:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ap-southeast-1
+      EKS_CLUSTER_NAME: eks-learning-dev # Change to your actual cluster name
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Update kubeconfig for EKS
+        run: |
+          aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
+
+      - name: Install Flux CLI
+        run: |
+          curl -s https://fluxcd.io/install.sh | sudo bash
+
+      - name: Bootstrap Flux to EKS
+        run: |
+          flux bootstrap github \
+            --owner=Kartheepan1991 \
+            --repository=eks-setup-terraform \
+            --branch=main \
+            --path=./flux \
+            --personal

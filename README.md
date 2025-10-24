@@ -1,3 +1,102 @@
+## CI/CD Automation
+
+### Terraform CI Workflow
+
+This repository includes a GitHub Actions workflow to automatically run `terraform init` and `terraform plan` on every push or pull request:
+
+- Workflow file: `.github/workflows/terraform-ci.yaml`
+- Uses AWS credentials from GitHub secrets
+- Validates infrastructure changes before merging
+
+#### How to Use
+1. Add your AWS credentials as GitHub secrets (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`).
+2. Push changes to any Terraform file or open a pull request.
+3. The workflow will run and show results in the Actions tab.
+
+You can extend this workflow to include `terraform apply` with manual approval for production deployments.
+# EKS Demo Project: Terraform, Flux CD, Helm, Sample App
+This repository demonstrates a real-world DevOps workflow for AWS EKS using Terraform, Flux CD (GitOps), Helm, and a sample application. Ideal for freelance/Upwork showcase and CKA exam practice.
+## Structure
+```
+/ 
+├── terraform/         # Terraform code for EKS, VPC, IAM, etc.
+├── flux/              # Flux CD manifests, sources, kustomizations
+├── helm-charts/       # Helm charts (custom/third-party)
+├── app/               # Sample application code
+├── scripts/           # Automation scripts
+├── docs/              # Documentation, diagrams, guides
+```
+## Workflow
+## End-to-End Workflow
+
+### 1. Provision EKS Cluster with Terraform
+1. Install prerequisites: AWS CLI, Terraform, kubectl
+2. Configure AWS credentials
+3. Initialize and apply Terraform:
+   ```bash
+   cd terraform/environments/dev
+   terraform init
+   terraform apply
+   ```
+4. Configure kubectl:
+   ```bash
+   aws eks update-kubeconfig --region <region> --name <cluster_name>
+   kubectl get nodes
+   ```
+
+
+### 2. Bootstrap Flux CD (GitOps)
+
+#### Option 1: Using Flux CLI
+1. Install Flux CLI:
+   ```bash
+   curl -s https://fluxcd.io/install.sh | sudo bash
+   ```
+2. Bootstrap Flux:
+   ```bash
+   flux bootstrap github \
+     --owner=Kartheepan1991 \
+     --repository=eks-setup-terraform \
+     --branch=main \
+     --path=./flux \
+     --personal
+   ```
+3. Flux will install controllers (including Helm Controller) and sync manifests from your repo.
+
+#### Option 2: Using GitHub Actions (Automated)
+1. Add your AWS credentials as GitHub secrets (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`).
+2. Review and customize `.github/workflows/flux-bootstrap.yaml` for your cluster name and region.
+3. Trigger the workflow from the Actions tab in GitHub.
+4. The workflow will:
+   - Configure AWS credentials
+   - Update kubeconfig for your EKS cluster
+   - Install kubectl and Flux CLI
+   - Run the Flux bootstrap command to connect your cluster to your repo
+5. This automates Flux installation and GitOps setup on your EKS cluster.
+
+### 3. Deploy NGINX Ingress Controller (Helm)
+1. Helm chart is in `helm-charts/nginx-ingress/`
+2. Deploy via Helm or Flux HelmRelease.
+
+### 4. Deploy Sample App (Kustomize/Manifests)
+1. App manifests are in `app/`:
+   - `deployment.yaml`, `service.yaml`, `ingress.yaml`, `index-configmap.yaml`
+2. Flux Kustomization applies these automatically.
+3. Access the app via the NGINX Ingress external IP.
+
+### 5. Automation & Cleanup
+1. Use scripts in `scripts/` for deployment and cleanup.
+2. Destroy resources when done:
+   ```bash
+   terraform destroy
+   ```
+
+## Getting Started
+- See `docs/` for architecture, setup, and cost management.
+- Follow step-by-step instructions in the README and scripts.
+
+---
+For questions or improvements, open an issue or contact the repo owner.
 # EKS Terraform Project
 
 This project creates a production-ready Amazon EKS (Elastic Kubernetes Service) cluster using Terraform modules with proper state management. It's designed for learning Kubernetes for CKA exam preparation while following best practices for cloud engineering.

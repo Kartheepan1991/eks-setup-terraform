@@ -80,26 +80,26 @@ resource "aws_subnet" "public" {
     )
   }
 
-  # NAT Gateway and EIP (if enabled)
-  resource "aws_eip" "nat" {
-    count = var.enable_nat_gateway ? length(var.public_subnet_cidrs) : 0
-    vpc   = true
-    depends_on = [aws_internet_gateway.main]
-    tags = local.common_tags
-  }
+# NAT Gateway and EIP (if enabled)
+resource "aws_eip" "nat" {
+  count = var.enable_nat_gateway ? length(var.public_subnet_cidrs) : 0
+  domain = "vpc"
+  depends_on = [aws_internet_gateway.main]
+  tags = local.common_tags
+}
 
-  resource "aws_nat_gateway" "main" {
-    count         = var.enable_nat_gateway ? length(var.public_subnet_cidrs) : 0
-    allocation_id = aws_eip.nat[count.index].id
-    subnet_id     = aws_subnet.public[count.index].id
-    depends_on    = [aws_internet_gateway.main]
-    tags          = local.common_tags
-  }
+resource "aws_nat_gateway" "main" {
+  count         = var.enable_nat_gateway ? length(var.public_subnet_cidrs) : 0
+  allocation_id = aws_eip.nat[count.index].id
+  subnet_id     = aws_subnet.public[count.index].id
+  depends_on    = [aws_internet_gateway.main]
+  tags          = local.common_tags
+}
 
-  # Public route table
-  resource "aws_route_table" "public" {
-    vpc_id = aws_vpc.main.id
-    tags   = merge(local.common_tags, { Name = "${var.vpc_name}-public-rt" })
+# Public route table
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main.id
+  tags   = merge(local.common_tags, { Name = "${var.vpc_name}-public-rt" })
   }
 
   # Private route tables

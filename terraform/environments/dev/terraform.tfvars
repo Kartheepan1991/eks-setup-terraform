@@ -6,8 +6,8 @@ environment = "dev"
 project_name = "eks-learning"
 vpc_cidr = "10.0.0.0/16"
 availability_zones = ["ap-southeast-1a", "ap-southeast-1b"]
-enable_nat_gateway = false
-cluster_version = "1.28"
+enable_nat_gateway = true
+cluster_version = "1.31"
 endpoint_public_access_cidrs = ["0.0.0.0/0"]  # Replace with your IP: ["YOUR_IP/32"]
 
 node_groups = {

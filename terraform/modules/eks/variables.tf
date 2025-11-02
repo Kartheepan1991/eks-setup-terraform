@@ -58,4 +58,29 @@ variable "log_retention_days" {
 }
 
 # Node Group Variables
+# Map of node group definitions to create managed node groups
+variable "node_groups" {
+  description = "Map of node group definitions to create managed node groups"
+  type = map(object({
+    desired_capacity = number
+    max_capacity     = number
+    min_capacity     = number
+    instance_types   = list(string)
+    labels           = map(string)
+    taints = list(object({
+      key    = string
+      value  = string
+      effect = string
+    }))
+    additional_tags = map(string)
+  }))
+  default = {}
+}
+
+# Tags to apply to resources created by this module
+variable "tags" {
+  description = "Tags to apply to resources created by this module"
+  type        = map(string)
+  default     = {}
+}
 # ...existing code continues...

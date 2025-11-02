@@ -1,3 +1,11 @@
+variable "common_tags" {
+  description = "Common tags to apply to all resources"
+  type        = map(string)
+  default     = {
+    Project     = "eks-learning"
+    Environment = "dev"
+  }
+}
 // Development Environment Variables
 
 variable "aws_region" {
@@ -64,5 +72,6 @@ variable "node_groups" {
       value  = string
       effect = string
     }))
+    additional_tags    = map(string)
   }))
 }

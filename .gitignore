@@ -3,8 +3,11 @@
 .terraform.lock.hcl
 terraform.tfstate
 terraform.tfstate.backup
+
+# Ignore all tfvars files except the dev environment one needed for CI
 *.tfvars
 *.tfvars.json
+!terraform/environments/dev/terraform.tfvars
 
 # Crash log files
 crash.log

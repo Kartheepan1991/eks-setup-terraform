@@ -58,4 +58,5 @@ output "cluster_iam_role_arn" {
 
 output "node_group_iam_role_arn" {
   description = "IAM role ARN of the EKS node group"
-# ...existing code continues...
+  value       = aws_iam_role.node_role.arn
+}

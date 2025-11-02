@@ -1,24 +1,15 @@
-# Example Terraform variables file
+# Example Terraform variables file for dev environment
 # Copy this file to terraform.tfvars and customize the values
 
-# AWS Configuration
 aws_region = "ap-southeast-1"
 environment = "dev"
 project_name = "eks-learning"
-
-# VPC Configuration
 vpc_cidr = "10.0.0.0/16"
 availability_zones = ["ap-southeast-1a", "ap-southeast-1b"]
 enable_nat_gateway = false
-
-# EKS Configuration
 cluster_version = "1.28"
-
-# Restrict API access to your IP for better security
-# Get your IP with: curl https://ipinfo.io/ip
 endpoint_public_access_cidrs = ["0.0.0.0/0"]  # Replace with your IP: ["YOUR_IP/32"]
 
-# Node Groups Configuration
 node_groups = {
   general = {
     desired_capacity = 2
@@ -33,9 +24,11 @@ node_groups = {
       environment = "dev"
     }
     taints = []
+    additional_tags = {
+      Name        = "eks-general-node"
+      Environment = "dev"
+    }
   }
-  
-  # Optional: Spot instances for cost savings (good for learning)
   spot = {
     desired_capacity = 1
     max_capacity     = 3
@@ -53,18 +46,9 @@ node_groups = {
       value  = "true"
       effect = "NO_SCHEDULE"
     }]
+    additional_tags = {
+      Name        = "eks-spot-node"
+      Environment = "dev"
+    }
   }
-}
-
-# Enable cluster autoscaler
-enable_cluster_autoscaler = true
-
-# Common tags for all resources
-common_tags = {
-  Project     = "eks-learning"
-  Environment = "dev"
-  ManagedBy   = "Terraform"
-  Owner       = "your-name"
-  Purpose     = "CKA-exam-preparation"
-  CostCenter  = "learning"
 }

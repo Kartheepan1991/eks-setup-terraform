@@ -58,4 +58,5 @@ output "public_route_table_id" {
 
 output "private_route_table_ids" {
   description = "List of IDs of the private route tables"
-# ...existing code continues...
+  value       = aws_route_table.private[*].id
+}

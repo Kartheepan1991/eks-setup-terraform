@@ -57,4 +57,6 @@ variable "enable_dns_support" {
 
 variable "tags" {
   description = "A map of tags to assign to the resource"
-# ...existing code continues...
+  type        = map(string)
+  default     = {}
+}

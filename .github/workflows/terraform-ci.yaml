@@ -1,15 +1,12 @@
 name: Terraform CI
 
 on:
-  push:
-    paths:
-      - 'terraform/**'
-      - '.github/workflows/terraform-ci.yaml'
   pull_request:
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       AWS_REGION: ap-southeast-1
     steps:
@@ -27,7 +24,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
 
       - name: Terraform Init
-        run: terraform -chdir=terraform/environments/dev init
+        run: terraform -chdir=terraform/environments/dev init -input=false
 
       - name: Terraform Plan
-        run: terraform -chdir=terraform/environments/dev plan
+        run: terraform -chdir=terraform/environments/dev plan -input=false -var-file=terraform.tfvars

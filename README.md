@@ -2,47 +2,86 @@
 
 ### Terraform CI Workflow
 
-This repository includes a GitHub Actions workflow to automatically run `terraform init` and `terraform plan` on every push or pull request:
+This repository includes a GitHub Actions workflow to automatically validate Terraform code on pull requests:
 
 - Workflow file: `.github/workflows/terraform-ci.yaml`
-- Uses AWS credentials from GitHub secrets
-- Validates infrastructure changes before merging
+- Runs `terraform init` and `terraform plan` on every PR
+- Uses AWS credentials from GitHub secrets (never stored in code)
+- Includes timeout protection (15 minutes) to prevent hanging builds
+- Uses `-input=false` flag to prevent interactive prompts
 
-#### How to Use
-1. Add your AWS credentials as GitHub secrets (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`).
-2. Push changes to any Terraform file or open a pull request.
-3. The workflow will run and show results in the Actions tab.
+#### Required GitHub Secrets
+1. Go to your GitHub repository Settings → Secrets and variables → Actions
+2. Add the following secrets:
+   - `AWS_ACCESS_KEY_ID`: Your AWS access key
+   - `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
 
-You can extend this workflow to include `terraform apply` with manual approval for production deployments.
+#### How It Works
+1. Open a pull request with Terraform changes
+2. The workflow automatically runs and validates your infrastructure code
+3. Review the plan output in the Actions tab
+4. Merge when all checks pass
+
+**Note**: The workflow only runs on pull requests (not on every push) to save GitHub Actions minutes and reduce noise.
 # EKS Demo Project: Terraform, Flux CD, Helm, Sample App
 This repository demonstrates a real-world DevOps workflow for AWS EKS using Terraform, Flux CD (GitOps), Helm, and a sample application. Ideal for freelance/Upwork showcase and CKA exam practice.
 ## Structure
 ```
 / 
 ├── terraform/         # Terraform code for EKS, VPC, IAM, etc.
+│   ├── modules/       # Reusable Terraform modules
+│   │   ├── eks/       # EKS cluster module
+│   │   └── vpc/       # VPC networking module
+│   └── environments/  # Environment-specific configurations
+│       └── dev/       # Development environment
 ├── flux/              # Flux CD manifests, sources, kustomizations
 ├── helm-charts/       # Helm charts (custom/third-party)
 ├── app/               # Sample application code
 ├── scripts/           # Automation scripts
 ├── docs/              # Documentation, diagrams, guides
+└── .github/workflows/ # CI/CD pipelines
 ```
 ## Workflow
 ## End-to-End Workflow
 
 ### 1. Provision EKS Cluster with Terraform
-1. Install prerequisites: AWS CLI, Terraform, kubectl
-2. Configure AWS credentials
-3. Initialize and apply Terraform:
+
+#### Prerequisites
+- AWS CLI configured with credentials
+- Terraform installed (v1.0+)
+- kubectl installed
+
+#### Steps
+1. Navigate to the dev environment:
    ```bash
    cd terraform/environments/dev
+   ```
+
+2. Review and customize `terraform.tfvars` with your settings (region, cluster name, etc.)
+
+3. Initialize Terraform:
+   ```bash
    terraform init
+   ```
+
+4. Review the execution plan:
+   ```bash
+   terraform plan
+   ```
+
+5. Apply the infrastructure:
+   ```bash
    terraform apply
    ```
-4. Configure kubectl:
+   (This takes ~10-15 minutes to create the EKS cluster)
+
+6. Configure kubectl to connect to your cluster:
    ```bash
-   aws eks update-kubeconfig --region <region> --name <cluster_name>
+   aws eks update-kubeconfig --region ap-southeast-1 --name eks-learning-dev
    kubectl get nodes
    ```
+
+**Note**: The `terraform.tfvars` file is tracked in git because it contains only non-sensitive configuration (no secrets or credentials).
 
 
 ### 2. Bootstrap Flux CD (GitOps)

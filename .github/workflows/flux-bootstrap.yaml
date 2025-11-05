@@ -34,6 +34,8 @@ jobs:
           curl -s https://fluxcd.io/install.sh | sudo bash
 
       - name: Bootstrap Flux to EKS
+        env:
+          GITHUB_TOKEN: ${{ secrets.FLUX_GITHUB_TOKEN }}
         run: |
           flux bootstrap github \
             --owner=Kartheepan1991 \

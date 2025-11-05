@@ -148,7 +148,7 @@ A production-ready AWS EKS infrastructure provisioned with Terraform, featuring 
 
 - **VPC CIDR**: 10.0.0.0/16   ```bash
 
-- **NAT Gateways**: 2 (one per AZ, configurable)   aws eks update-kubeconfig --region ap-southeast-1 --name eks-learning-dev
+- **NAT Gateways**: 2 (one per AZ, configurable)   aws eks update-kubeconfig --region ap-southeast-1 --name eks-demo-kartheepan-apse1-dev
 
 - **Kubernetes Version**: 1.31 (upgradeable incrementally)   kubectl get nodes
 
@@ -408,7 +408,7 @@ aws_region          = "ap-southeast-1"- **Region:** ap-southeast-1 (Singapore)
 
 environment         = "dev"- **Availability Zones:** 2 (ap-southeast-1a, ap-southeast-1b)
 
-project_name        = "eks-learning"- **VPC CIDR:** 10.0.0.0/16
+project_name        = "eks-demo-kartheepan-apse1"- **VPC CIDR:** 10.0.0.0/16
 
 cluster_version     = "1.31"- **NAT Gateways:** 2 (one per AZ for high availability) - configurable via `enable_nat_gateway`
 
@@ -486,7 +486,7 @@ terraform apply│   ├── ingress.yaml
 
 ```bash│   ├── setup-backend.sh         # Backend infrastructure setup
 
-aws eks update-kubeconfig --region ap-southeast-1 --name eks-learning-dev│   ├── deploy.sh                # Deployment script
+aws eks update-kubeconfig --region ap-southeast-1 --name eks-demo-kartheepan-apse1-dev│   ├── deploy.sh                # Deployment script
 
 kubectl get nodes│   └── cleanup.sh               # Cleanup script
 
@@ -596,7 +596,7 @@ terraform apply- Current cluster version is 1.31 (can be upgraded incrementally)
 
 - Route tables and subnet associations# Update kubeconfig
 
-- EKS cluster control planeaws eks update-kubeconfig --region ap-southeast-1 --name eks-learning-dev
+- EKS cluster control planeaws eks update-kubeconfig --region ap-southeast-1 --name eks-demo-kartheepan-apse1-dev
 
 - IAM roles and policies
 
@@ -616,7 +616,7 @@ terraform apply- Current cluster version is 1.31 (can be upgraded incrementally)
 
 # Update kubeconfigkubectl get pods --all-namespaces
 
-aws eks update-kubeconfig --region ap-southeast-1 --name eks-learning-dev```
+aws eks update-kubeconfig --region ap-southeast-1 --name eks-demo-kartheepan-apse1-dev```
 
 
 
@@ -986,7 +986,7 @@ availability_zones  = ["ap-southeast-1a", "ap-southeast-1b"]
 
 ```hcl
 cluster_version     = "1.31"  # Kubernetes version
-project_name        = "eks-learning"
+project_name        = "eks-demo-kartheepan-apse1"
 environment         = "dev"
 ```
 
@@ -1039,7 +1039,7 @@ node_groups = {
 
 ```hcl
 common_tags = {
-  Project     = "eks-learning"
+  Project     = "eks-demo-kartheepan-apse1"
   Environment = "dev"
   ManagedBy   = "Terraform"
   Owner       = "YourName"
@@ -1091,7 +1091,7 @@ common_tags = {
 
 6. **Monitor with Cost Explorer**:
    - Go to AWS Console → Cost Management → Cost Explorer
-   - Filter by tags (Project=eks-learning)
+   - Filter by tags (Project=eks-demo-kartheepan-apse1)
 
 ### Cleanup Checklist
 
@@ -1152,13 +1152,13 @@ export AWS_DEFAULT_REGION=ap-southeast-1
 **Solution**:
 ```bash
 # Update kubeconfig
-aws eks update-kubeconfig --region ap-southeast-1 --name eks-learning-dev
+aws eks update-kubeconfig --region ap-southeast-1 --name eks-demo-kartheepan-apse1-dev
 
 # Verify AWS credentials
 aws sts get-caller-identity
 
 # Check cluster status
-aws eks describe-cluster --name eks-learning-dev --region ap-southeast-1
+aws eks describe-cluster --name eks-demo-kartheepan-apse1-dev --region ap-southeast-1
 ```
 
 #### 5. Flux Bootstrap Fails
@@ -1204,7 +1204,7 @@ terraform show
 terraform state list
 
 # AWS EKS debugging
-aws eks describe-cluster --name eks-learning-dev --region ap-southeast-1
+aws eks describe-cluster --name eks-demo-kartheepan-apse1-dev --region ap-southeast-1
 
 # Kubernetes debugging
 kubectl get events --all-namespaces

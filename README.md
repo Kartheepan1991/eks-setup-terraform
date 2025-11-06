@@ -1307,9 +1307,75 @@ flux logs --follow
 
 ---
 
+## 🚀 Complete CI/CD Pipeline
+
+This project includes a **production-ready CI/CD pipeline** that combines **GitHub Actions** (CI) with **Flux CD** (GitOps deployment).
+
+### Pipeline Architecture
+
+```
+Developer Push → GitHub Actions (Test + Build + Push to ECR) 
+    → Update Manifest → Flux Detects Change → Deploy to EKS
+```
+
+**Total Time: ~5-6 minutes from commit to production**
+
+### Components
+
+#### 1. **GitHub Actions CI** (`.github/workflows/ci-cd.yml`)
+- ✅ **Automated Testing**: Runs Jest tests on every push
+- ✅ **Docker Build**: Multi-stage builds for optimized images
+- ✅ **ECR Push**: Pushes images to Amazon ECR with SHA tags
+- ✅ **Manifest Update**: Automatically updates deployment.yaml
+- ✅ **Security Scanning**: ECR vulnerability scanning enabled
+
+#### 2. **Flux CD GitOps** (`flux/`)
+- ✅ **Automated Deployment**: Watches Git repo every 1 minute
+- ✅ **Rolling Updates**: Zero-downtime deployments
+- ✅ **Health Checks**: Validates pod readiness before completion
+- ✅ **Auto-Rollback**: Reverts failed deployments automatically
+
+#### 3. **Sample Application** (`sample-app/`)
+- 🟢 **Node.js/Express** REST API
+- 🟢 **Health Endpoints**: `/health`, `/api/info`
+- 🟢 **Dockerized**: Multi-stage Dockerfile with non-root user
+- 🟢 **Production Ready**: Resource limits, security contexts, probes
+
+### Quick Start CI/CD
+
+```bash
+# 1. Configure AWS credentials in GitHub Secrets
+AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+
+# 2. Update ECR registry URL (replace with your account ID)
+sed -i 's/311719319684/<YOUR_ACCOUNT_ID>/g' app/deployment.yaml
+
+# 3. Push code to trigger pipeline
+git add sample-app/
+git commit -m "Update application"
+git push origin main
+
+# 4. Watch deployment
+flux get kustomizations --watch
+kubectl get pods -l app=eks-demo-app -w
+```
+
+### Key Features
+- **Zero-Downtime Deployments**: Rolling updates with `maxUnavailable: 0`
+- **Automated Testing**: CI pipeline gates deployment on test success
+- **GitOps**: Git as single source of truth
+- **Security**: Non-root containers, vulnerability scanning, resource limits
+- **Observability**: Health probes, structured logging
+
+### Documentation
+- 📘 **[Complete CI/CD Guide](CICD_PIPELINE.md)** - Architecture, concepts, interview tips
+- 📗 **[Setup Instructions](CICD_SETUP.md)** - Step-by-step configuration guide
+
+---
+
 ## 🤝 Contributing
 
-This project is designed for learning and demonstration. Feel free to:
+This project is designed for learning and demonstration. Feel to:
 - Fork and experiment
 - Add new features (monitoring, service mesh, etc.)
 - Improve documentation

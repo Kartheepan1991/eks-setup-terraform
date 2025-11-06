@@ -130,7 +130,7 @@ resource "aws_eks_node_group" "main" {
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "${var.cluster_name}-${each.key}"
   node_role_arn   = aws_iam_role.node_role.arn
-  subnet_ids      = var.subnet_ids
+  subnet_ids      = var.worker_subnet_ids  # Use private subnets for worker nodes
 
   scaling_config {
     desired_size = each.value.desired_capacity

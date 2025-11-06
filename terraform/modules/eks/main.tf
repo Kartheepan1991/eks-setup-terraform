@@ -88,6 +88,14 @@ resource "aws_security_group" "cluster_sg" {
   description = "EKS cluster security group"
   vpc_id      = var.vpc_id
 
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic"
+  }
+
   tags = merge(local.common_tags, { Name = "${var.cluster_name}-eks-cluster-sg" })
 }
 

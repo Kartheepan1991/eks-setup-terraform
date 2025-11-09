@@ -82,14 +82,9 @@ resource "aws_iam_role_policy_attachment" "node_AmazonEC2ContainerRegistryReadOn
   role       = aws_iam_role.node_role.name
 }
 
-# EKS Cluster Security Group
-resource "aws_security_group" "cluster_sg" {
-  name        = "${var.cluster_name}-eks-cluster-sg"
-  description = "EKS cluster security group"
-  vpc_id      = var.vpc_id
-
-  tags = merge(local.common_tags, { Name = "${var.cluster_name}-eks-cluster-sg" })
-}
+# Note: AWS EKS automatically creates and manages a cluster security group
+# that provides the necessary communication between control plane and nodes.
+# We don't need to create custom security groups for basic EKS functionality.
 
 # EKS Cluster
 resource "aws_eks_cluster" "main" {
@@ -99,7 +94,6 @@ resource "aws_eks_cluster" "main" {
 
   vpc_config {
     subnet_ids              = var.subnet_ids
-    security_group_ids      = [aws_security_group.cluster_sg.id]
     endpoint_private_access = var.endpoint_private_access
     endpoint_public_access  = var.endpoint_public_access
     public_access_cidrs     = var.endpoint_public_access_cidrs
@@ -130,7 +124,7 @@ resource "aws_eks_node_group" "main" {
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "${var.cluster_name}-${each.key}"
   node_role_arn   = aws_iam_role.node_role.arn
-  subnet_ids      = var.subnet_ids
+  subnet_ids      = var.worker_subnet_ids  # Use private subnets for worker nodes
 
   scaling_config {
     desired_size = each.value.desired_capacity
@@ -144,6 +138,9 @@ resource "aws_eks_node_group" "main" {
   ami_type       = each.value.ami_type
 
   labels = each.value.labels
+
+  # Note: remote_access block removed - SSH key not configured
+  # Node security group is attached via security group rules
 
   dynamic "taint" {
     for_each = each.value.taints

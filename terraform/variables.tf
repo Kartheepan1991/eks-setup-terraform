@@ -16,7 +16,7 @@ variable "environment" {
 variable "project_name" {
 	description = "Name of the project"
 	type        = string
-	default     = "eks-learning"
+	default     = "eks-demo-kartheepan-apse1"
 }
 
 variable "cluster_version" {

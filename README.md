@@ -1,950 +1,707 @@
-# EKS Terraform Project with Flux CD and GitOps## CI/CD Automation
+# EKS Terraform Project with Complete CI/CD Pipeline
 
-A production-ready AWS EKS infrastructure provisioned with Terraform, featuring automated CI/CD, GitOps with Flux CD, and Helm-based application deployment. Perfect for demonstrating DevOps expertise ### Terraform CI Workflow
+> **Production-ready AWS EKS infrastructure** with Terraform, Flux CD GitOps, GitHub Actions CI/CD, and a sample Node.js application. Perfect for DevOps interviews, freelance portfolios, and learning Kubernetes.
 
-## 📋 Table of ContentsThis repository includes a GitHub Actions workflow to automatically validate Terraform code on pull requests:
-
-- [Architecture Overview](#-architecture-overview)- Workflow file: `.github/workflows/terraform-ci.yaml`
-
-- [Project Structure](#-project-structure)- Runs `terraform init` and `terraform plan` on every PR
-
-- [Prerequisites](#-prerequisites)- Uses AWS credentials from GitHub secrets (never stored in code)
-
-- [Quick Start Guide](#-quick-start-guide)- Includes timeout protection (15 minutes) to prevent hanging builds
-
-- [Detailed Setup Steps](#-detailed-setup-steps)- Uses `-input=false` flag to prevent interactive prompts
-
-- [CI/CD Automation](#-cicd-automation)
-
-- [Flux CD GitOps](#-flux-cd-gitops)#### Required GitHub Secrets
-
-- [Configuration Options](#-configuration-options)1. Go to your GitHub repository Settings → Secrets and variables → Actions
-
-- [Cost Management](#-cost-management)2. Add the following secrets:
-
-- [Troubleshooting](#-troubleshooting)   - `AWS_ACCESS_KEY_ID`: Your AWS access key
-
-- [Cleanup](#-cleanup)   - `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
-
----#### How It Works
-
-1. Open a pull request with Terraform changes
-
-## 🏗️ Architecture Overview2. The workflow automatically runs and validates your infrastructure code
-
-3. Review the plan output in the Actions tab
-
-```4. Merge when all checks pass
-
-┌───────────────────────────────────────────────────────────┐
-
-│              VPC (10.0.0.0/16) - ap-southeast-1           │**Note**: The workflow only runs on pull requests (not on every push) to save GitHub Actions minutes and reduce noise.
-
-│  ┌────────────────────────┐  ┌────────────────────────┐   │# EKS Demo Project: Terraform, Flux CD, Helm, Sample App
-
-│  │   Public Subnet AZ-A   │  │   Public Subnet AZ-B   │   │This repository demonstrates a real-world DevOps workflow for AWS EKS using Terraform, Flux CD (GitOps), Helm, and a sample application. Ideal for freelance/Upwork showcase and CKA exam practice.
-
-│  │    10.0.101.0/24       │  │    10.0.102.0/24       │   │## Structure
-
-│  │  ┌──────────────────┐  │  │  ┌──────────────────┐  │   │```
-
-│  │  │  NAT Gateway     │  │  │  │  NAT Gateway     │  │   │/ 
-
-│  │  │  (Internet GW)   │  │  │  │  (Internet GW)   │  │   │├── terraform/         # Terraform code for EKS, VPC, IAM, etc.
-
-│  │  └──────────────────┘  │  │  └──────────────────┘  │   ││   ├── modules/       # Reusable Terraform modules
-
-│  └────────────────────────┘  └────────────────────────┘   ││   │   ├── eks/       # EKS cluster module
-
-│                                                            ││   │   └── vpc/       # VPC networking module
-
-│  ┌────────────────────────┐  ┌────────────────────────┐   ││   └── environments/  # Environment-specific configurations
-
-│  │  Private Subnet AZ-A   │  │  Private Subnet AZ-B   │   ││       └── dev/       # Development environment
-
-│  │    10.0.1.0/24         │  │    10.0.2.0/24         │   │├── flux/              # Flux CD manifests, sources, kustomizations
-
-│  │  ┌──────────────────┐  │  │  ┌──────────────────┐  │   │├── helm-charts/       # Helm charts (custom/third-party)
-
-│  │  │  EKS Worker      │  │  │  │  EKS Worker      │  │   │├── app/               # Sample application code
-
-│  │  │  Nodes           │  │  │  │  Nodes           │  │   │├── scripts/           # Automation scripts
-
-│  │  └──────────────────┘  │  │  └──────────────────┘  │   │├── docs/              # Documentation, diagrams, guides
-
-│  └────────────────────────┘  └────────────────────────┘   │└── .github/workflows/ # CI/CD pipelines
-
-└───────────────────────────────────────────────────────────┘```
-
-                           │## Workflow
-
-                           ▼## End-to-End Workflow
-
-                  ┌─────────────────┐
-
-                  │  EKS Control    │### 1. Provision EKS Cluster with Terraform
-
-                  │  Plane (v1.31)  │
-
-                  │  - Multi-AZ HA  │#### Prerequisites
-
-                  │  - OIDC Enabled │- AWS CLI configured with credentials
-
-                  └─────────────────┘- Terraform installed (v1.0+)
-
-```- kubectl installed
-
-
-
-### Key Components#### Steps
-
-1. Navigate to the dev environment:
-
-**Infrastructure (Terraform)**   ```bash
-
-- **EKS Cluster**: Kubernetes v1.31 with managed control plane   cd terraform/environments/dev
-
-- **VPC**: Multi-AZ setup with public and private subnets   ```
-
-- **NAT Gateways**: One per AZ for high availability (configurable)
-
-- **Security Groups**: Minimal access with least privilege2. Review and customize `terraform.tfvars` with your settings (region, cluster name, etc.)
-
-- **IAM Roles**: OIDC-enabled for service account integration
-
-- **CloudWatch**: Cluster logging and monitoring3. Initialize Terraform:
-
-   ```bash
-
-**GitOps (Flux CD)**   terraform init
-
-- Automated deployment from Git repository   ```
-
-- Continuous reconciliation of cluster state
-
-- Support for Helm releases and Kustomize4. Review the execution plan:
-
-- Multi-tenancy ready   ```bash
-
-   terraform plan
-
-**CI/CD (GitHub Actions)**   ```
-
-- Terraform validation on pull requests
-
-- Automated Flux bootstrap workflow5. Apply the infrastructure:
-
-- AWS credential integration via secrets   ```bash
-
-   terraform apply
-
-### Architecture Highlights   ```
-
-   (This takes ~10-15 minutes to create the EKS cluster)
-
-- **Region**: ap-southeast-1 (Singapore)
-
-- **Availability Zones**: 2 (ap-southeast-1a, ap-southeast-1b)6. Configure kubectl to connect to your cluster:
-
-- **VPC CIDR**: 10.0.0.0/16   ```bash
-
-- **NAT Gateways**: 2 (one per AZ, configurable)   aws eks update-kubeconfig --region ap-southeast-1 --name eks-learning-dev
-
-- **Kubernetes Version**: 1.31 (upgradeable incrementally)   kubectl get nodes
-
-- **Node Groups**: Configurable (on-demand and spot instances)   ```
-
-
-
----**Note**: The `terraform.tfvars` file is tracked in git because it contains only non-sensitive configuration (no secrets or credentials).
-
-
-
-## 📁 Project Structure
-
-### 2. Bootstrap Flux CD (GitOps)
-
-```
-
-eks-terraform-project/#### Option 1: Using Flux CLI (Local)
-
-├── terraform/1. Install Flux CLI:
-
-│   ├── modules/                 # Reusable Terraform modules   ```bash
-
-│   │   ├── vpc/                 # VPC, subnets, NAT, routing   curl -s https://fluxcd.io/install.sh | sudo bash
-
-│   │   │   ├── main.tf   ```
-
-│   │   │   ├── variables.tf2. Create a GitHub Personal Access Token:
-
-│   │   │   └── outputs.tf   - Go to: https://github.com/settings/tokens
-
-│   │   └── eks/                 # EKS cluster, IAM, OIDC   - Generate new token (classic) with `repo` scope
-
-│   │       ├── main.tf   
-
-│   │       ├── variables.tf3. Bootstrap Flux:
-
-│   │       └── outputs.tf   ```bash
-
-│   └── environments/            # Environment-specific configs   export GITHUB_TOKEN=<your-token>
-
-│       └── dev/                 # Development environment   flux bootstrap github \
-
-│           ├── main.tf          # Calls modules with dev values     --owner=Kartheepan1991 \
-
-│           ├── variables.tf     # Environment variables     --repository=eks-setup-terraform \
-
-│           ├── terraform.tfvars # Variable values (non-sensitive)     --branch=main \
-
-│           └── outputs.tf       # Environment outputs     --path=./flux \
-
-├── flux/                        # Flux CD GitOps manifests     --personal
-
-│   └── flux-bootstrap.yaml      # GitRepository and Kustomization   ```
-
-├── app/                         # Application manifests (synced by Flux)4. Flux will install controllers and sync manifests from your repo automatically.
-
-│   ├── deployment.yaml          # Sample app deployment
-
-│   ├── service.yaml             # Service definition#### Option 2: Using GitHub Actions (Automated - Recommended)
-
-│   ├── ingress.yaml             # Ingress rules1. **Create a GitHub Personal Access Token:**
-
-│   └── index-configmap.yaml    # Configuration   - Go to: https://github.com/settings/tokens
-
-├── helm-charts/                 # Helm charts   - Generate new token (classic) with `repo` scope
-
-│   └── nginx-ingress/           # NGINX Ingress Controller   - Copy the token
-
-│       ├── Chart.yaml
-
-│       ├── values.yaml2. **Add required GitHub Secrets:**
-
-│       └── templates/   - Go to Settings → Secrets and variables → Actions
-
-├── .github/workflows/           # CI/CD automation   - Add these secrets:
-
-│   ├── terraform-ci.yaml        # Terraform validation on PRs     - `AWS_ACCESS_KEY_ID`: Your AWS access key (already added)
-
-│   └── flux-bootstrap.yaml      # Automated Flux setup     - `AWS_SECRET_ACCESS_KEY`: Your AWS secret key (already added)
-
-├── scripts/     - `FLUX_GITHUB_TOKEN`: Your GitHub Personal Access Token (new)
-
-│   ├── setup-backend.sh         # S3/DynamoDB backend setup
-
-│   ├── deploy.sh                # Deployment automation3. **Trigger the Flux Bootstrap workflow:**
-
-│   └── cleanup.sh               # Resource cleanup   - Go to Actions tab → "Flux Bootstrap to EKS"
-
-└── README.md                    # This file   - Click "Run workflow"
-
-```   - Select branch: `main`
-
-   - Click "Run workflow"
-
-### Module Details
-
-4. **What the workflow does:**
-
-**VPC Module (`terraform/modules/vpc/`)**   - Configures AWS credentials
-
-- Creates production-ready VPC with public and private subnets   - Updates kubeconfig for your EKS cluster
-
-- Configurable NAT gateways for private subnet internet access   - Installs Flux CLI
-
-- EKS-specific tags for load balancer subnet discovery   - Bootstraps Flux to connect your cluster to this repo
-
-- VPC endpoints for S3 to reduce data transfer costs   - Flux creates `flux-system/` directory with GitOps manifests
-
-- Internet gateway for public subnet routing
-
-5. **After bootstrap completes:**
-
-**EKS Module (`terraform/modules/eks/`)**   - Flux will automatically sync your `./app` directory
-
-- Managed EKS cluster with configurable Kubernetes version   - Any changes pushed to `./app` will be deployed automatically
-
-- IAM roles for cluster and worker nodes   - Check status: `kubectl get gitrepositories -n flux-system`
-
-- OIDC provider for IAM Roles for Service Accounts (IRSA)
-
-- Security groups with minimal required access### 3. Deploy NGINX Ingress Controller (Helm)
-
-- CloudWatch logging for audit and API logs1. Helm chart is in `helm-charts/nginx-ingress/`
-
-- Support for managed node groups (on-demand and spot)2. Deploy via Helm or Flux HelmRelease.
-
-
-
----### 4. Deploy Sample App (Kustomize/Manifests)
-
-1. App manifests are in `app/`:
-
-## 🔧 Prerequisites   - `deployment.yaml`, `service.yaml`, `ingress.yaml`, `index-configmap.yaml`
-
-2. Flux Kustomization applies these automatically.
-
-### Required Tools3. Access the app via the NGINX Ingress external IP.
-
-
-
-1. **AWS CLI** (v2.x)### 5. Automation & Cleanup
-
-   ```bash1. Use scripts in `scripts/` for deployment and cleanup.
-
-   aws --version2. Destroy resources when done:
-
-   aws configure  # Set up your AWS credentials   ```bash
-
-   ```   terraform destroy
-
-   ```
-
-2. **Terraform** (v1.0+)
-
-   ```bash## Getting Started
-
-   terraform version- See `docs/` for architecture, setup, and cost management.
-
-   ```- Follow step-by-step instructions in the README and scripts.
-
-
-
-3. **kubectl** (v1.28+)---
-
-   ```bashFor questions or improvements, open an issue or contact the repo owner.
-
-   kubectl version --client# EKS Terraform Project
-
-   ```
-
-This project creates a production-ready Amazon EKS (Elastic Kubernetes Service) cluster using Terraform modules with proper state management. It's designed for learning Kubernetes for CKA exam preparation while following best practices for cloud engineering.
-
-4. **Flux CLI** (optional, for manual operations)
-
-   ```bash## 🏗️ Architecture Overview
-
-   curl -s https://fluxcd.io/install.sh | sudo bash
-
-   flux version```
-
-   ```┌───────────────────────────────────────────────────────────┐
-
-│              VPC (10.0.0.0/16) - ap-southeast-1           │
-
-### AWS Permissions│  ┌────────────────────────┐  ┌────────────────────────┐   │
-
-│  │   Public Subnet AZ-A   │  │   Public Subnet AZ-B   │   │
-
-Your AWS user/role needs permissions for:│  │    10.0.101.0/24       │  │    10.0.102.0/24       │   │
-
-- EC2 (VPC, subnets, security groups, NAT gateways)│  │  ┌──────────────────┐  │  │  ┌──────────────────┐  │   │
-
-- EKS (cluster creation, node groups)│  │  │  NAT Gateway     │  │  │  │  NAT Gateway     │  │   │
-
-- IAM (roles, policies, OIDC provider)│  │  │  (Internet GW)   │  │  │  │  (Internet GW)   │  │   │
-
-- CloudWatch Logs│  │  └──────────────────┘  │  │  └──────────────────┘  │   │
-
-- S3 and DynamoDB (for Terraform state backend)│  └────────────────────────┘  └────────────────────────┘   │
-
-│                                                            │
-
----│  ┌────────────────────────┐  ┌────────────────────────┐   │
-
-│  │  Private Subnet AZ-A   │  │  Private Subnet AZ-B   │   │
-
-## 🚀 Quick Start Guide│  │    10.0.1.0/24         │  │    10.0.2.0/24         │   │
-
-│  │                        │  │                        │   │
-
-### 1. Clone the Repository│  │  ┌──────────────────┐  │  │  ┌──────────────────┐  │   │
-
-│  │  │  EKS Worker      │  │  │  │  EKS Worker      │  │   │
-
-```bash│  │  │  Nodes (t3.small)│  │  │  │  Nodes (Ready)   │  │   │
-
-git clone https://github.com/Kartheepan1991/eks-setup-terraform.git│  │  │  - aws-node CNI  │  │  │  │                  │  │   │
-
-cd eks-setup-terraform│  │  │  - kube-proxy    │  │  │  │                  │  │   │
-
-```│  │  └──────────────────┘  │  │  └──────────────────┘  │   │
-
-│  └────────────────────────┘  └────────────────────────┘   │
-
-### 2. Configure AWS Credentials│                          ▲                                 │
-
-│                          │                                 │
-
-```bash│                   VPC Endpoint (S3)                        │
-
-aws configure└───────────────────────────────────────────────────────────┘
-
-# Enter your AWS Access Key ID                           │
-
-# Enter your AWS Secret Access Key                           ▼
-
-# Default region: ap-southeast-1                  ┌─────────────────┐
-
-# Default output format: json                  │  EKS Control    │
-
-```                  │  Plane (v1.28)  │
-
-                  │  - Multi-AZ HA  │
-
-### 3. Customize Configuration                  │  - OIDC Enabled │
-
-                  └─────────────────┘
-
-Edit `terraform/environments/dev/terraform.tfvars`:```
-
-
-
-```hcl**Key Architecture Points:**
-
-aws_region          = "ap-southeast-1"- **Region:** ap-southeast-1 (Singapore)
-
-environment         = "dev"- **Availability Zones:** 2 (ap-southeast-1a, ap-southeast-1b)
-
-project_name        = "eks-learning"- **VPC CIDR:** 10.0.0.0/16
-
-cluster_version     = "1.31"- **NAT Gateways:** 2 (one per AZ for high availability) - configurable via `enable_nat_gateway`
-
-enable_nat_gateway  = true- **EKS Cluster:** Version 1.31 (upgradeable)
-
-vpc_cidr            = "10.0.0.0/16"- **Node Groups:** Configurable (on-demand and spot instances)
-
-availability_zones  = ["ap-southeast-1a", "ap-southeast-1b"]
-
-## 📁 Project Structure
-
-node_groups = {
-
-  general = {```
-
-    desired_capacity = 2eks-terraform-project/
-
-    max_capacity     = 4├── terraform/
-
-    min_capacity     = 1│   ├── modules/                 # Reusable Terraform modules
-
-    instance_types   = ["t3.medium"]│   │   ├── vpc/                 # VPC module for networking
-
-    capacity_type    = "ON_DEMAND"│   │   │   ├── main.tf
-
-    # ... more configuration│   │   │   ├── variables.tf
-
-  }│   │   │   └── outputs.tf
-
-}│   │   └── eks/                 # EKS module for cluster creation
-
-```│   │       ├── main.tf
-
-│   │       ├── variables.tf
-
-### 4. Deploy Infrastructure│   │       └── outputs.tf
-
-│   └── environments/            # Environment-specific configurations
-
-```bash│       └── dev/                 # Development environment
-
-cd terraform/environments/dev│           ├── main.tf
-
-│           ├── variables.tf
-
-# Initialize Terraform│           ├── terraform.tfvars # Variable values (tracked in git)
-
-terraform init│           └── outputs.tf
-
-├── flux/                        # Flux CD GitOps manifests
-
-# Preview changes│   └── flux-bootstrap.yaml      # GitRepository and Kustomization
-
-terraform plan├── app/                         # Application manifests (synced by Flux)
-
-│   ├── deployment.yaml
-
-# Apply changes│   ├── service.yaml
-
-terraform apply│   ├── ingress.yaml
-
-# Type 'yes' when prompted│   └── index-configmap.yaml
-
-```├── helm-charts/                 # Helm charts
-
-│   └── nginx-ingress/
-
-**Note**: EKS cluster creation takes ~10-15 minutes.├── .github/workflows/           # CI/CD automation
-
-│   ├── terraform-ci.yaml        # Terraform validation on PRs
-
-### 5. Configure kubectl│   └── flux-bootstrap.yaml      # Automated Flux setup
-
-├── scripts/
-
-```bash│   ├── setup-backend.sh         # Backend infrastructure setup
-
-aws eks update-kubeconfig --region ap-southeast-1 --name eks-learning-dev│   ├── deploy.sh                # Deployment script
-
-kubectl get nodes│   └── cleanup.sh               # Cleanup script
-
-kubectl cluster-info└── docs/                        # Documentation
-
-```    ├── ARCHITECTURE.md
-
-    ├── STRUCTURE.md
-
-### 6. Bootstrap Flux CD (Optional)    └── WORKFLOW.md
-
-```
-
-See [Flux CD GitOps](#-flux-cd-gitops) section for detailed instructions.
-
-## 🚀 Quick Start
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Terraform](https://img.shields.io/badge/Terraform-1.0+-purple)](https://www.terraform.io/)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-1.31-blue)](https://kubernetes.io/)
+[![AWS](https://img.shields.io/badge/AWS-EKS-orange)](https://aws.amazon.com/eks/)
 
 ---
 
-### Prerequisites
+## 📋 Table of Contents
 
-## 📖 Detailed Setup Steps
+- [Overview](#-overview)
+- [Architecture](#-architecture)
+- [Project Structure](#-project-structure)
+- [CI/CD Pipeline](#-cicd-pipeline)
+- [Prerequisites](#-prerequisites)
+- [Quick Start](#-quick-start)
+- [Detailed Setup](#-detailed-setup)
+  - [1. Infrastructure (Terraform)](#1-infrastructure-terraform)
+  - [2. CI/CD (GitHub Actions)](#2-cicd-github-actions)
+  - [3. GitOps (Flux CD)](#3-gitops-flux-cd)
+  - [4. Application Deployment](#4-application-deployment)
+- [Configuration](#-configuration)
+- [Monitoring & Troubleshooting](#-monitoring--troubleshooting)
+- [Cost Management](#-cost-management)
+- [Interview Demo Guide](#-interview-demo-guide)
+- [Cleanup](#-cleanup)
+- [License](#-license)
 
-1. **AWS CLI** configured with appropriate permissions
+---
 
-### Step 1: Terraform Backend Setup (Optional)2. **Terraform** >= 1.0 installed
+## 🎯 Overview
 
-3. **kubectl** installed for cluster management
+This project demonstrates a **complete DevOps workflow** for deploying and managing applications on AWS EKS:
 
-If using remote state (recommended for teams):
+### What You'll Learn
 
-### Step 1: Setup Backend Infrastructure
+✅ **Infrastructure as Code**: Terraform modules for VPC, EKS, and IAM  
+✅ **GitOps**: Flux CD for continuous deployment from Git  
+✅ **CI/CD**: GitHub Actions for automated testing, building, and deployment  
+✅ **Kubernetes**: Deployments, Services, Ingress, Health Probes, Resource Management  
+✅ **Container Security**: Multi-stage builds, non-root containers, vulnerability scanning  
+✅ **AWS Best Practices**: Cost optimization, security groups, IAM roles  
 
-```bash
+### Key Features
 
-./scripts/setup-backend.sh```bash
+- **Zero-downtime deployments** with rolling updates
+- **Automated CI/CD pipeline** (5-6 minutes commit-to-production)
+- **GitOps** - Git as single source of truth
+- **Multi-AZ high availability** with autoscaling
+- **Production-ready security** (RBAC, security contexts, resource limits)
+- **Comprehensive documentation** for interviews and demos
 
-# Note the S3 bucket and DynamoDB table names# Run the backend setup script
+---
 
-./scripts/setup-backend.sh
+## 🏗️ Architecture
 
-# Update backend.tf with the output values
-
-```# Update backend.tf with the output values
+### Infrastructure Architecture
 
 ```
+┌─────────────────────────────────────────────────────────────────────┐
+│                     AWS Region: ap-southeast-1                      │
+│                                                                     │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │              VPC (10.0.0.0/16)                              │   │
+│  │                                                             │   │
+│  │  ┌──────────────────────┐  ┌──────────────────────┐        │   │
+│  │  │  Public Subnet AZ-A  │  │  Public Subnet AZ-B  │        │   │
+│  │  │   10.0.101.0/24      │  │   10.0.102.0/24      │        │   │
+│  │  │                      │  │                      │        │   │
+│  │  │  ┌──────────────┐    │  │  ┌──────────────┐    │        │   │
+│  │  │  │ NAT Gateway  │    │  │  │ NAT Gateway  │    │        │   │
+│  │  │  │ + Elastic IP │    │  │  │ + Elastic IP │    │        │   │
+│  │  │  └──────────────┘    │  │  └──────────────┘    │        │   │
+│  │  │         │            │  │         │            │        │   │
+│  │  └─────────┼────────────┘  └─────────┼────────────┘        │   │
+│  │            │                         │                     │   │
+│  │  ┌─────────▼─────────────┐  ┌───────▼────────────┐        │   │
+│  │  │ Private Subnet AZ-A   │  │ Private Subnet AZ-B│        │   │
+│  │  │   10.0.1.0/24         │  │   10.0.2.0/24      │        │   │
+│  │  │                       │  │                    │        │   │
+│  │  │  ┌───────────────┐    │  │  ┌───────────────┐│        │   │
+│  │  │  │ EKS Worker    │    │  │  │ EKS Worker    ││        │   │
+│  │  │  │ Nodes (t3.    │    │  │  │ Nodes (t3.    ││        │   │
+│  │  │  │ small x 2)    │    │  │  │ small x 2)    ││        │   │
+│  │  │  └───────────────┘    │  │  └───────────────┘│        │   │
+│  │  └───────────────────────┘  └────────────────────┘        │   │
+│  │                                                             │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │          EKS Control Plane (v1.31) - Managed by AWS         │   │
+│  │          - Multi-AZ High Availability                       │   │
+│  │          - OIDC Provider for IRSA                           │   │
+│  │          - CloudWatch Logging Enabled                       │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-### Step 2: Initialize and Plan
+### CI/CD Pipeline Architecture
 
-### Step 2: Configure Backend
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                       COMPLETE CI/CD FLOW                            │
+└──────────────────────────────────────────────────────────────────────┘
+
+  Developer                GitHub Repository           GitHub Actions
+  ┌─────────┐              ┌───────────────┐          ┌──────────────┐
+  │         │              │               │          │              │
+  │ git push│─────────────▶│  sample-app/  │─────────▶│ 1. Run Tests │
+  │ (code   │              │  ├─ server.js │          │    (Jest)    │
+  │ changes)│              │  └─ Dockerfile│          │              │
+  │         │              │               │          └──────┬───────┘
+  └─────────┘              └───────────────┘                 │
+                                                              │
+                                                              ▼
+                                                     ┌──────────────┐
+                                                     │ 2. Build     │
+                                                     │    Docker    │
+                                                     │    Image     │
+                                                     └──────┬───────┘
+                                                            │
+                                                            ▼
+   ┌──────────────────────────────────────────────────────────┐
+   │           Amazon ECR (Container Registry)                │
+   │   Image: 311719319684.dkr.ecr.../eks-demo-app:sha       │
+   └──────────────────────┬───────────────────────────────────┘
+                          │
+                          │ 3. Update manifest with new image tag
+                          ▼
+                   ┌─────────────┐
+                   │ app/        │
+                   │ deployment. │─────┐
+                   │ yaml        │     │ Git commit pushed
+                   └─────────────┘     │
+                          │            │
+                          ▼            ▼
+                   ┌────────────────────────┐
+                   │    Flux CD (GitOps)    │
+                   │  - Watches repo (1min) │
+                   │  - Detects changes     │
+                   │  - Applies to cluster  │
+                   └──────────┬─────────────┘
+                              │
+                              ▼
+                   ┌────────────────────────┐
+                   │   EKS Cluster (Prod)   │
+                   │                        │
+                   │  ┌──────┐   ┌──────┐  │
+                   │  │ Pod 1│   │ Pod 2│  │
+                   │  └───┬──┘   └───┬──┘  │
+                   │      └──────────┘     │
+                   │           │           │
+                   │      ┌────▼─────┐     │
+                   │      │ Service  │     │
+                   │      └────┬─────┘     │
+                   │           │           │
+                   │      ┌────▼─────┐     │
+                   │      │ Ingress  │     │
+                   │      └──────────┘     │
+                   └────────────────────────┘
+
+⏱️  Total Time: 5-6 minutes from commit to production
+🔄  Zero Downtime: Rolling updates with health checks
+```
+
+---
+
+#### NAT Gateway Configuration
+
+```hcl
+enable_nat_gateway = true   # Set to false to save ~$64/month
+```
+eks-terraform-project/
+│
+├── terraform/                      # Infrastructure as Code
+│   ├── modules/
+│   │   ├── vpc/                   # VPC with public/private subnets, NAT
+│   │   │   ├── main.tf
+│   │   │   ├── variables.tf
+│   │   │   └── outputs.tf
+│   │   └── eks/                   # EKS cluster, node groups, IAM
+│   │       ├── main.tf
+│   │       ├── variables.tf
+│   │       └── outputs.tf
+│   └── environments/
+│       └── dev/                   # Development environment
+│           ├── main.tf           # Calls VPC + EKS modules
+│           ├── terraform.tfvars  # Environment-specific values
+│           ├── variables.tf
+│           └── outputs.tf
+│
+├── sample-app/                     # Node.js Application (Source Code)
+│   ├── server.js                  # Express REST API
+│   ├── server.test.js             # Jest unit tests
+│   ├── package.json               # Dependencies
+│   ├── Dockerfile                 # Multi-stage container build
+│   └── .dockerignore
+│
+├── app/                            # Kubernetes Manifests (Deployed by Flux)
+│   ├── deployment.yaml            # Deployment with health probes
+│   ├── service.yaml               # ClusterIP service
+│   └── ingress.yaml               # Nginx ingress routing
+│
+├── flux/                           # Flux CD GitOps Configuration
+│   ├── flux-bootstrap.yaml        # GitRepository + Kustomization
+│   ├── README.md                  # Flux setup instructions
+│   └── nginx-ingress-helmrelease.yaml.example  # Optional Helm chart
+│
+├── helm-charts/                    # Optional Helm Charts
+│   └── nginx-ingress/             # Custom ingress controller chart
+│       ├── Chart.yaml
+│       ├── values.yaml
+│       └── templates/
+│
+├── .github/workflows/              # CI/CD Automation
+│   └── ci-cd.yml                  # Complete pipeline (test, build, deploy)
+│
+├── scripts/                        # Utility Scripts
+│   ├── setup-backend.sh           # S3 + DynamoDB for Terraform state
+│   ├── deploy.sh                  # Deployment automation
+│   └── cleanup.sh                 # Resource cleanup
+│
+└── Documentation
+    ├── README.md                   # This file
+    ├── CICD_PIPELINE.md           # Detailed CI/CD docs
+    ├── CICD_SETUP.md              # Setup instructions
+    ├── CICD_QUICK_REFERENCE.md    # Command reference
+    ├── COST_MANAGEMENT.md         # AWS cost optimization
+    └── LICENSE                    # MIT License
+```
+
+---
+
+## 🔄 CI/CD Pipeline
+
+### Pipeline Overview
+
+The project implements a **complete automated CI/CD pipeline** using GitHub Actions and Flux CD:
+
+#### 1. Continuous Integration (GitHub Actions)
+
+**Workflow File**: `.github/workflows/ci-cd.yml`
+
+**Jobs**:
+
+1. **Test** (`~30 seconds`)
+   - Checkout code
+   - Install Node.js dependencies
+   - Run Jest unit tests
+   - Upload coverage reports to Codecov
+
+2. **Build & Push** (`~3-4 minutes`)
+   - Configure AWS credentials
+   - Login to Amazon ECR
+   - Build Docker image (multi-stage)
+   - Tag with: `SHA`, `branch`, `latest`
+   - Push to ECR registry
+   - Enable vulnerability scanning
+
+3. **Update Manifest** (`~10 seconds`)
+   - Update `app/deployment.yaml` with new image tag
+   - Commit changes back to repository
+   - Include `[skip ci]` to prevent loops
+
+4. **Notify** (`~5 seconds`)
+   - Report pipeline status
+   - Can integrate with Slack/Teams
+
+**Total CI Time**: ~4-5 minutes
+
+#### 2. Continuous Deployment (Flux CD)
+
+**How It Works**:
+
+1. **Flux watches** the Git repository every 1 minute
+2. **Detects changes** in `app/` directory manifests
+3. **Pulls new image** from Amazon ECR
+4. **Applies changes** to EKS cluster
+5. **Rolling update** with zero-downtime (maxUnavailable: 0)
+6. **Health checks** validate pods before routing traffic
+
+**Total CD Time**: ~1-2 minutes
+
+### Application Endpoints
+
+The sample Node.js application exposes:
+
+- `GET /` - Welcome message with version info
+- `GET /health` - Health check endpoint (liveness/readiness)
+- `GET /api/info` - Application metadata and tech stack
+
+### Key Features
+
+✅ **Automated Testing**: Unit tests gate production deployments  
+✅ **Zero-Downtime**: Rolling updates with health validation  
+✅ **GitOps**: Git as single source of truth  
+✅ **Security**: Vulnerability scanning, non-root containers  
+✅ **Fast**: 5-6 minute commit-to-production cycle  
+
+---
+
+## 📦 Prerequisites
+
+### Required Tools
+
+- **AWS Account** with permissions for EC2, VPC, EKS, ECR, IAM
+- **AWS CLI** (v2.x) - [Install](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+- **Terraform** (v1.0+) - [Install](https://developer.hashicorp.com/terraform/downloads)
+- **kubectl** (v1.28+) - [Install](https://kubernetes.io/docs/tasks/tools/)
+- **Flux CLI** (v2.x) - [Install](https://fluxcd.io/flux/installation/)
+- **Docker** (for local testing) - [Install](https://docs.docker.com/get-docker/)
+- **Git** - [Install](https://git-scm.com/downloads)
+
+### AWS Permissions Required
+
+Your AWS user/role needs:
+- EC2 (VPC, Subnets, Security Groups, NAT Gateway)
+- EKS (Cluster management)
+- ECR (Container registry)
+- IAM (Roles and policies)
+- CloudWatch (Logging)
+
+### Cost Estimate
+
+- **EKS Control Plane**: ~$73/month ($0.10/hour)
+- **Worker Nodes**: 2 x t3.small ~$30/month
+- **NAT Gateways**: 2 x ~$32/month = ~$64/month
+- **Data Transfer**: Variable
+- **ECR Storage**: ~$0.10/GB/month
+
+**Total**: ~$170-200/month for dev environment
+
+💡 **Tip**: Destroy resources when not in use to save costs!
+
+---
+
+## 🚀 Quick Start
+
+### 1. Clone Repository
 
 ```bash
+git clone https://github.com/Kartheepan1991/eks-setup-terraform.git
+cd eks-terraform-project
+```
 
-cd terraform/environments/devUpdate `backend.tf` with the S3 bucket name and DynamoDB table from the setup script output.
+### 2. Configure AWS
 
+```bash
+aws configure
+# Enter: Access Key ID, Secret Access Key, Region (ap-southeast-1)
 
+# Verify
+aws sts get-caller-identity
+```
 
-# Initialize Terraform (downloads providers, sets up backend)### Step 2: Deploy the Infrastructure
+### 3. Update Configuration
 
+```bash
+# Update with your AWS account ID
+export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+# Update ECR URL in deployment manifest
+sed -i "s/311719319684/${AWS_ACCOUNT_ID}/g" app/deployment.yaml
+```
+
+### 4. Deploy Infrastructure
+
+**Solution**:
+```bash
+cd terraform/environments/dev
+
+# Re-initialize
 terraform init
+```
+
+# Review plan
+terraform plan -var-file=terraform.tfvars
+
+# Apply (takes ~10-15 minutes)
+terraform apply -var-file=terraform.tfvars
+```
+
+### 5. Configure kubectl
+
+#### 4. kubectl Can't Connect to Cluster
+
+**Error**: `Unable to connect to the server`
+
+**Solution**:
+```bash
+# Get kubeconfig
+aws eks update-kubeconfig \
+  --region ap-southeast-1 \
+  --name eks-demo-kartheepan-apse1-dev
+
+# Verify
+kubectl get nodes
+```
+
+### 6. Bootstrap Flux CD
 
 ```bash
+# Set GitHub token
+export GITHUB_TOKEN=<your-github-personal-access-token>
 
-# Validate configuration# Navigate to the dev environment
+# Bootstrap Flux
+flux bootstrap github \
+  --owner=Kartheepan1991 \
+  --repository=eks-setup-terraform \
+  --branch=main \
+  --path=flux \
+  --personal
 
-terraform validatecd terraform/environments/dev
+# Verify Flux
+flux check
+kubectl get pods -n flux-system
+```
 
+### 7. Deploy Application
 
+```bash
+# Flux automatically deploys from app/ directory
+# Watch deployment
+kubectl get deployments -w
+kubectl get pods -l app=eks-demo-app -w
 
-# Plan deployment (review what will be created)# Initialize Terraform
+# Check status
+kubectl get all
+```
 
-terraform plan -out=tfplanterraform init
+### 8. Test Application
 
+```bash
+# Port forward to test locally
+kubectl port-forward svc/eks-demo-app 8080:80
 
+# In another terminal
+curl http://localhost:8080/
+curl http://localhost:8080/health
+curl http://localhost:8080/api/info
+```
 
-# Review the plan output carefully# Plan the deployment
+---
 
-```terraform plan
+## 📚 Detailed Setup
 
+### 1. Infrastructure (Terraform)
 
+#### Initialize Backend (Optional - Remote State)
 
-### Step 3: Apply Infrastructure# Apply the configuration
+```bash
+# Run setup script for S3 + DynamoDB backend
+./scripts/setup-backend.sh
 
-terraform apply
+# Update backend.tf with your bucket name
+```
 
-```bash```
+#### Review Terraform Variables
 
-# Apply the planned changes
-
-terraform apply tfplan**Note:** 
-
-- EKS cluster creation takes ~10-15 minutes
-
-# Or apply directly- NAT gateways are enabled by default (`enable_nat_gateway = true`)
-
-terraform apply- Current cluster version is 1.31 (can be upgraded incrementally)
-
-```- Node groups are defined in `terraform.tfvars` but need to be implemented in the EKS module
-
-
-
-**What gets created:**### Step 3: Configure kubectl
-
-- VPC with public and private subnets in 2 AZs
-
-- Internet Gateway and NAT Gateways (if enabled)```bash
-
-- Route tables and subnet associations# Update kubeconfig
-
-- EKS cluster control planeaws eks update-kubeconfig --region ap-southeast-1 --name eks-learning-dev
-
-- IAM roles and policies
-
-- Security groups# Verify cluster access
-
-- OIDC provider for service accountskubectl get nodes
-
-- CloudWatch log groups
-
-# Check cluster information
-
-### Step 4: Verify Clusterkubectl cluster-info
-
-
-
-```bash# View all system pods
-
-# Update kubeconfigkubectl get pods --all-namespaces
-
-aws eks update-kubeconfig --region ap-southeast-1 --name eks-learning-dev```
-
-
-
-# Verify nodes (may be empty if node groups not deployed)## 🧩 Modules Explained
-
-kubectl get nodes
-
-### VPC Module (`modules/vpc/`)
-
-# Check cluster components
-
-kubectl get pods -n kube-systemCreates a production-ready VPC with:
-
-- **Public subnets** for load balancers and NAT gateways
-
-# Verify cluster info- **Private subnets** for EKS worker nodes
-
-kubectl cluster-info- **NAT gateways** for outbound internet access from private subnets
-
-```- **VPC endpoints** for S3 to reduce data transfer costs
-
-- **Proper tagging** for EKS resource discovery
-
-### Step 5: Deploy Applications
-
-**Key Features:**
-
-After Flux is bootstrapped (see next section), applications in the `app/` directory will be automatically deployed and synchronized.- **2 Availability Zones** (ap-southeast-1a, ap-southeast-1b) for high availability
-
-- Automatic subnet CIDR calculation (10.0.1.0/24, 10.0.2.0/24 for private)
-
----- EKS-specific tags for load balancer subnet discovery
-
-- VPC endpoints for S3 to reduce data transfer costs
-
-## 🔄 CI/CD Automation- NAT Gateways in public subnets for private subnet internet access
-
-
-
-### Terraform CI Workflow### EKS Module (`modules/eks/`)
-
-
-
-**Location**: `.github/workflows/terraform-ci.yaml`Creates a secure EKS cluster with:
-
-- **Managed node groups** with auto-scaling
-
-**Purpose**: Automatically validates Terraform code on every pull request.- **OIDC identity provider** for IRSA (IAM Roles for Service Accounts)
-
-- **CloudWatch logging** for cluster audit and API logs
-
-**Features**:- **Security groups** with minimal required access
-
-- Runs `terraform init` and `terraform plan`- **Multiple node groups** (on-demand and spot instances)
-
-- Uses `-input=false` to prevent interactive prompts
-
-- 15-minute timeout to prevent hanging builds**Key Features:**
-
-- Only runs on PRs (not on every push)- Production-ready IAM roles and policies
-
-- Cluster autoscaler support
-
-**Setup**:- Both on-demand and spot instance node groups
-
-- Comprehensive logging and monitoring
-
-1. **Add GitHub Secrets**:
-
-   - Go to: Settings → Secrets and variables → Actions## 🔧 Configuration Options
-
-   - Add secrets:
-
-     - `AWS_ACCESS_KEY_ID`### Node Groups
-
-     - `AWS_SECRET_ACCESS_KEY`
-
-The project creates a managed node group:
-
-2. **Workflow triggers automatically** when you:
-
-   - Open a pull request1. **General Node Group**
-
-   - Push commits to an existing PR   - On-demand instances (t3.small)
-
-   - Modify Terraform files   - 1 desired, 1-2 min-max capacity
-
-   - Deployed across 2 availability zones
-
-3. **Review results**:   - 20GB EBS storage per node
-
-   - Go to Actions tab in GitHub   - Suitable for learning and CKA practice
-
-   - View the workflow run
-
-   - Review the plan output**Current Configuration:**
-
-- **Instance Type:** t3.small (2 vCPU, 2GB RAM)
-
-**Workflow YAML**:- **AMI Type:** Amazon Linux 2 (AL2_x86_64)
-
-```yaml- **Disk Size:** 20GB
-
-name: Terraform CI- **Scaling:** Min 1, Max 2, Desired 1
-
-on:
-
-  pull_request:### Customization
-
-jobs:
-
-  terraform:Modify `terraform/environments/dev/terraform.tfvars` to customize:
-
-    runs-on: ubuntu-latest- **Region and AZs:** Change `aws_region` and `availability_zones`
-
-    timeout-minutes: 15- **NAT Gateway:** Enable/disable with `enable_nat_gateway` (currently: true)
-
-    steps:- **Kubernetes version:** Change `cluster_version` (current: 1.31, upgradeable incrementally)
-
-      - uses: actions/checkout@v4- **Network CIDR:** Modify `vpc_cidr` (default: 10.0.0.0/16)
-
-      - uses: aws-actions/configure-aws-credentials@v4- **Node groups:** Configure instance types, scaling, and instance types
-
-        with:  - On-demand nodes: General workloads
-
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}  - Spot instances: Cost-effective for fault-tolerant workloads
-
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}- **Resource tags:** Update `common_tags` for cost tracking
-
-          aws-region: ap-southeast-1
-
-      - uses: hashicorp/setup-terraform@v2## 🛡️ Security Best Practices
-
-      - run: terraform -chdir=terraform/environments/dev init -input=false
-
-      - run: terraform -chdir=terraform/environments/dev plan -input=false -var-file=terraform.tfvars1. **Network Security**
-
-```   - Private subnets for worker nodes
-
-   - Security groups with minimal access
-
----   - VPC endpoints to reduce internet traffic
-
-
-
-## 🔁 Flux CD GitOps2. **IAM Security**
-
-   - Least privilege IAM roles
-
-### What is Flux CD?   - OIDC provider for service account integration
-
-   - No hardcoded credentials
-
-Flux is a GitOps tool that keeps your Kubernetes cluster in sync with your Git repository. Any changes pushed to your `app/` directory will be automatically deployed to the cluster.
-
-3. **Cluster Security**
-
-### Flux Bootstrap Options   - Private API endpoint option
-
-   - Audit logging enabled
-
-#### Option 1: Manual CLI Bootstrap (Recommended for Learning)   - Encryption at rest and in transit
-
-
-
-1. **Install Flux CLI**:## 📊 State Management
-
-   ```bash
-
-   curl -s https://fluxcd.io/install.sh | sudo bashThis project uses Terraform remote state with:
-
-   flux version- **S3 bucket** for state storage with versioning and encryption
-
-   ```- **DynamoDB table** for state locking to prevent concurrent modifications
-
-- **Backend encryption** for security
-
-2. **Create GitHub Personal Access Token**:
-
-   - Go to: https://github.com/settings/tokens## 🎯 Learning Objectives for CKA
-
-   - Generate new token (classic)
-
-   - Select scope: `repo` (full control of private repositories)This setup helps you practice:
-
-   - Copy the token
-
-1. **Cluster Management**
-
-3. **Bootstrap Flux**:   - Understanding EKS architecture
-
-   ```bash   - Node management and scaling
-
-   export GITHUB_TOKEN=<your-token>   - Cluster networking
-
-   flux bootstrap github \
-
-     --owner=Kartheepan1991 \2. **Networking**
-
-     --repository=eks-setup-terraform \   - Pod-to-pod communication
-
-     --branch=main \   - Service networking
-
-     --path=./flux \   - Ingress controllers
-
-     --personal
-
-   ```3. **Security**
-
-   - RBAC configuration
-
-4. **Verify installation**:   - Service accounts and IRSA
-
-   ```bash   - Network policies
-
-   flux check
-
-   kubectl get pods -n flux-system4. **Troubleshooting**
-
-   kubectl get gitrepositories -n flux-system   - Cluster debugging
-
-   kubectl get kustomizations -n flux-system   - Log analysis
-
-   ```   - Performance monitoring
-
-
-
-#### Option 2: Automated GitHub Actions (Recommended for Production)## 📝 Common kubectl Commands
-
-
-
-**Location**: `.github/workflows/flux-bootstrap.yaml````bash
-
-# Cluster information
-
-**Setup**:kubectl cluster-info
-
-kubectl get nodes
-
-1. **Create GitHub Personal Access Token** (same as above)kubectl describe nodes
-
-
-
-2. **Add GitHub Secrets**:# Workload management
-
-   - Go to: Settings → Secrets and variables → Actionskubectl get pods --all-namespaces
-
-   - Add secrets:kubectl get services --all-namespaces
-
-     - `AWS_ACCESS_KEY_ID` (already added)kubectl get deployments --all-namespaces
-
-     - `AWS_SECRET_ACCESS_KEY` (already added)
-
-     - `FLUX_GITHUB_TOKEN` (your GitHub PAT)# Troubleshooting
-
-kubectl logs <pod-name>
-
-3. **Trigger the workflow**:kubectl describe pod <pod-name>
-
-   - Go to: Actions → "Flux Bootstrap to EKS"kubectl top nodes
-
-   - Click "Run workflow"kubectl top pods
-
-   - Select branch: `main````
-
-   - Click "Run workflow"
-
-## 🧹 Cleanup
-
-4. **What the workflow does**:
-
-   - Configures AWS credentialsTo destroy the infrastructure and avoid ongoing AWS costs:
-
-   - Updates kubeconfig for your EKS cluster
-
-   - Installs Flux CLI```bash
-
-   - Runs `flux bootstrap github` commandcd terraform/environments/dev
-
-   - Flux creates `flux-system/` directory in your repoterraform destroy
-
-   - Starts syncing your `./app` directory
-
-# Confirm with 'yes' when prompted
-
-5. **Verify deployment**:```
-
-   ```bash
-
-   kubectl get pods -n flux-system**Note:** Destroying takes ~5-10 minutes. Make sure to destroy when not using the cluster to avoid unnecessary costs (~$0.10/hour for EKS control plane + NAT gateways + EC2 instances).
-
-   flux get sources git
-
-   flux get kustomizations## 📚 Additional Resources
-
-   ```
-
-- [EKS Best Practices Guide](https://aws.github.io/aws-eks-best-practices/)
-
-### How Flux Works- [Kubernetes Documentation](https://kubernetes.io/docs/)
-
-- [CKA Exam Curriculum](https://github.com/cncf/curriculum)
-
-1. **GitRepository**: Flux watches your GitHub repo for changes- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
-
-2. **Kustomization**: Flux applies manifests from `./app` directory
-
-3. **Automatic Sync**: Every change to `app/` is deployed within 1-10 minutes## 🤝 Contributing
-
-4. **Reconciliation**: Flux ensures cluster state matches Git (desired state)
-
-This project is designed for learning. Feel free to:
-
-### Flux Configuration- Experiment with different configurations
-
-- Add additional node groups
-
-**File**: `flux/flux-bootstrap.yaml`- Implement monitoring solutions
-
-- Practice with different Kubernetes workloads
+**File**: `terraform/environments/dev/terraform.tfvars`
+
+```hcl
+project_name = "eks-demo-kartheepan-apse1"
+environment  = "dev"
+region       = "ap-southeast-1"
+
+vpc_cidr             = "10.0.0.0/16"
+availability_zones   = ["ap-southeast-1a", "ap-southeast-1b"]
+public_subnet_cidrs  = ["10.0.101.0/24", "10.0.102.0/24"]
+private_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]
+
+eks_version = "1.31"
+
+node_groups = {
+  general = {
+    desired_size   = 2
+    min_size       = 1
+    max_size       = 4
+    instance_types = ["t3.small"]
+    capacity_type  = "ON_DEMAND"
+    disk_size      = 20
+  }
+}
+
+enable_nat_gateway = true
+```
+
+#### Deploy Infrastructure
+
+```bash
+cd terraform/environments/dev
+
+# Validate configuration
+terraform validate
+
+# Plan deployment
+terraform plan -var-file=terraform.tfvars
+
+# Apply changes
+terraform apply -var-file=terraform.tfvars -auto-approve
+```
+
+**Expected Output**:
+- VPC with public/private subnets
+- 2 NAT Gateways
+- EKS cluster (control plane)
+- Node group with 2 worker nodes
+- IAM roles and security groups
+
+#### Verify Deployment
+
+```bash
+# List EKS clusters
+aws eks list-clusters --region ap-southeast-1
+
+# Get cluster details
+aws eks describe-cluster \
+  --name eks-demo-kartheepan-apse1-dev \
+  --region ap-southeast-1
+
+# Configure kubectl
+aws eks update-kubeconfig \
+  --region ap-southeast-1 \
+  --name eks-demo-kartheepan-apse1-dev
+
+# Check nodes
+kubectl get nodes -o wide
+```
+
+---
+
+### 2. CI/CD (GitHub Actions)
+
+#### Configure GitHub Secrets
+
+1. Go to your GitHub repository
+2. Navigate to: **Settings** → **Secrets and variables** → **Actions**
+3. Click **"New repository secret"**
+4. Add the following secrets:
+
+| Secret Name | Description | How to Get |
+|-------------|-------------|------------|
+| `AWS_ACCESS_KEY_ID` | IAM user access key | AWS Console → IAM → Users → Security credentials |
+| `AWS_SECRET_ACCESS_KEY` | IAM secret key | Generated when creating access key |
+
+#### Create IAM User for CI/CD
+
+```bash
+# Create IAM policy
+cat > ecr-cicd-policy.json << 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "ecr:PutImage",
+        "ecr:InitiateLayerUpload",
+        "ecr:UploadLayerPart",
+        "ecr:CompleteLayerUpload",
+        "ecr:CreateRepository",
+        "ecr:DescribeRepositories",
+        "ecr:ListImages"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+
+# Create policy
+aws iam create-policy \
+  --policy-name EKS-CICD-ECR-Policy \
+  --policy-document file://ecr-cicd-policy.json
+
+# Create IAM user
+aws iam create-user --user-name github-actions-cicd
+
+# Attach policy
+aws iam attach-user-policy \
+  --user-name github-actions-cicd \
+  --policy-arn arn:aws:iam::$(aws sts get-caller-identity --query Account --output text):policy/EKS-CICD-ECR-Policy
+
+# Create access keys
+aws iam create-access-key --user-name github-actions-cicd
+```
+
+#### Test Locally
+
+```bash
+cd sample-app
+
+# Install dependencies
+npm install
+
+# Run tests
+npm test
+
+# Build Docker image
+docker build -t eks-demo-app:local .
+
+# Run locally
+docker run -p 3000:3000 eks-demo-app:local
+
+# Test endpoints
+curl http://localhost:3000/
+curl http://localhost:3000/health
+```
+
+#### Trigger Pipeline
+
+```bash
+# Make a change
+echo "// CI/CD test" >> sample-app/server.js
+
+# Commit and push to main branch
+git add sample-app/
+git commit -m "Trigger CI/CD pipeline"
+git push origin main
+
+# Watch GitHub Actions
+# Go to: https://github.com/Kartheepan1991/eks-setup-terraform/actions
+```
+
+---
+
+### 3. GitOps (Flux CD)
+
+#### Install Flux CLI
+
+```bash
+# Linux/macOS
+curl -s https://fluxcd.io/install.sh | sudo bash
+
+# Verify installation
+flux --version
+```
+
+#### Create GitHub Personal Access Token
+
+1. Go to GitHub → **Settings** → **Developer settings** → **Personal access tokens** → **Tokens (classic)**
+2. Click **"Generate new token (classic)"**
+3. Select scopes:
+   - `repo` (all)
+   - `admin:repo_hook` (read/write)
+4. Generate and copy token
+
+#### Bootstrap Flux
+
+```bash
+# Export token
+export GITHUB_TOKEN=<your-token>
+
+# Bootstrap Flux
+flux bootstrap github \
+  --owner=Kartheepan1991 \
+  --repository=eks-setup-terraform \
+  --branch=main \
+  --path=flux \
+  --personal \
+  --token-auth
+
+# This will:
+# 1. Install Flux components in flux-system namespace
+# 2. Create deploy key in GitHub
+# 3. Commit Flux manifests to your repo
+# 4. Start watching for changes
+```
+
+#### Verify Flux Installation
+
+```bash
+# Check Flux components
+flux check
+
+# View all Flux resources
+flux get all
+
+# Check GitRepository
+flux get sources git
+
+# Check Kustomization
+flux get kustomizations
+
+# View Flux logs
+kubectl logs -n flux-system deploy/source-controller -f
+kubectl logs -n flux-system deploy/kustomization-controller -f
+```
+
+#### Flux Configuration
+
+**File**: `flux/flux-bootstrap.yaml`
 
 ```yaml
-
-apiVersion: source.toolkit.fluxcd.io/v1beta2---
-
+apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: GitRepository
-
-metadata:**Happy Learning! 🚀**
+metadata:
   name: eks-demo-repo
   namespace: flux-system
 spec:
@@ -966,352 +723,602 @@ spec:
     name: eks-demo-repo
 ```
 
+#### How Flux Works
+
+1. **Watches**: Git repository every 1 minute for changes
+2. **Syncs**: Pulls latest manifests from `app/` directory
+3. **Applies**: Updates Kubernetes resources in cluster
+4. **Reconciles**: Ensures cluster state matches Git state
+5. **Prunes**: Removes resources deleted from Git
+
 ---
 
-## ⚙️ Configuration Options
+### 4. Application Deployment
 
-### Customizing Your Deployment
+#### Deploy Nginx Ingress Controller (Option 1 - Simplest)
 
-Edit `terraform/environments/dev/terraform.tfvars`:
+```bash
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/aws/deploy.yaml
 
-#### Region and Network Settings
-
-```hcl
-aws_region          = "ap-southeast-1"
-vpc_cidr            = "10.0.0.0/16"
-availability_zones  = ["ap-southeast-1a", "ap-southeast-1b"]
+# Wait for LoadBalancer
+kubectl get svc -n ingress-nginx ingress-nginx-controller -w
 ```
 
-#### EKS Cluster Settings
+#### Deploy via Helm (Option 2 - Recommended)
 
-```hcl
-cluster_version     = "1.31"  # Kubernetes version
-project_name        = "eks-learning"
-environment         = "dev"
+```bash
+# Add Helm repository
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+
+# Install nginx-ingress
+helm install nginx-ingress ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx \
+  --create-namespace \
+  --set controller.service.type=LoadBalancer \
+  --set controller.service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-type"="nlb"
 ```
 
-**Version Upgrade Notes**:
-- AWS EKS requires incremental version upgrades (1.28 → 1.29 → 1.30 → 1.31)
-- Use `terraform apply` with updated `cluster_version`
-- Each upgrade takes ~20-30 minutes
+#### Verify Application Deployment
 
-#### NAT Gateway Configuration
+```bash
+# Check deployments
+kubectl get deployments
+kubectl describe deployment eks-demo-app
 
-```hcl
-enable_nat_gateway = true   # Set to false to save ~$64/month
+# Check pods
+kubectl get pods -l app=eks-demo-app
+kubectl logs -f deployment/eks-demo-app
+
+# Check service
+kubectl get svc eks-demo-app
+
+# Check ingress
+kubectl get ingress
 ```
 
-**Important**: NAT gateways are required for worker nodes to pull container images and access AWS services from private subnets.
+#### Access Application
 
-#### Node Group Configuration
+**Method 1: Port Forward (Local Testing)**
+
+```bash
+kubectl port-forward svc/eks-demo-app 8080:80
+
+# Test
+curl http://localhost:8080/
+curl http://localhost:8080/health
+curl http://localhost:8080/api/info
+```
+
+**Method 2: LoadBalancer (Production)**
+
+```bash
+# Get LoadBalancer URL
+kubectl get svc -n ingress-nginx ingress-nginx-controller
+
+# Access via LoadBalancer DNS
+curl http://<load-balancer-dns>/
+```
+
+**Method 3: Update /etc/hosts (Local Development)**
+
+```bash
+# Get LoadBalancer IP
+LB_IP=$(kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+
+# Add to /etc/hosts
+echo "${LB_IP} eks-demo.local" | sudo tee -a /etc/hosts
+
+# Access
+curl http://eks-demo.local/
+```
+
+---
+
+## ⚙️ Configuration
+
+# Check Terraform state
+terraform show
+terraform state list
+
+Modify node group settings in `terraform/environments/dev/terraform.tfvars`:
 
 ```hcl
 node_groups = {
   general = {
-    desired_capacity = 2
-    max_capacity     = 4
-    min_capacity     = 1
-    instance_types   = ["t3.medium"]
-    capacity_type    = "ON_DEMAND"
-    disk_size        = 20
-    ami_type         = "AL2_x86_64"
-    labels = {
-      role        = "general"
-      environment = "dev"
-    }
-    taints = []
-    additional_tags = {
-      Name = "eks-general-node"
-    }
-  },
-  spot = {
-    desired_capacity = 1
-    max_capacity     = 3
-    min_capacity     = 0
-    instance_types   = ["t3.medium", "t3.large"]
-    capacity_type    = "SPOT"
-    # Spot instances are ~70% cheaper but can be terminated
+    desired_size   = 2          # Number of nodes to maintain
+    min_size       = 1          # Minimum autoscaling size
+    max_size       = 4          # Maximum autoscaling size
+    instance_types = ["t3.small"]  # EC2 instance type
+    capacity_type  = "ON_DEMAND"   # or "SPOT" for cost savings
+    disk_size      = 20         # GB per node
   }
 }
 ```
 
-#### Common Tags
+**Available Instance Types** (Free Tier / Low Cost):
+- `t3.micro` (2 vCPU, 1GB RAM) - Free Tier eligible
+- `t3.small` (2 vCPU, 2GB RAM) - ~$15/month
+- `t3.medium` (2 vCPU, 4GB RAM) - ~$30/month
 
-```hcl
-common_tags = {
-  Project     = "eks-learning"
-  Environment = "dev"
-  ManagedBy   = "Terraform"
-  Owner       = "YourName"
-}
+### Application Configuration
+
+**Resource Limits**: `app/deployment.yaml`
+
+```yaml
+resources:
+  requests:
+    cpu: 100m      # Minimum CPU
+    memory: 128Mi  # Minimum memory
+  limits:
+    cpu: 500m      # Maximum CPU
+    memory: 512Mi  # Maximum memory
+```
+
+**Scaling**: Adjust replicas
+
+```yaml
+spec:
+  replicas: 2  # Number of pod replicas
+```
+
+**Health Checks**:
+
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 3000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 3000
+  initialDelaySeconds: 10
+  periodSeconds: 5
+```
+
+---
+
+## 📊 Monitoring & Troubleshooting
+
+### Check Pipeline Status
+
+**GitHub Actions**:
+```bash
+# Visit in browser
+https://github.com/Kartheepan1991/eks-setup-terraform/actions
+```
+
+**Flux CD**:
+```bash
+# Check Flux status
+flux get all
+
+# Check GitRepository sync
+flux get sources git
+
+# Watch Kustomization
+flux get kustomizations --watch
+
+# Force reconciliation
+flux reconcile kustomization eks-demo-kustomization --with-source
+```
+
+### View Logs
+
+```bash
+# Application logs
+kubectl logs -f deployment/eks-demo-app
+
+# All pods with label
+kubectl logs -l app=eks-demo-app --all-containers=true -f
+
+# Flux logs
+kubectl logs -n flux-system deploy/source-controller -f
+kubectl logs -n flux-system deploy/kustomization-controller -f
+
+# Nginx ingress logs
+kubectl logs -n ingress-nginx deploy/ingress-nginx-controller -f
+```
+
+### Common Issues
+
+#### Issue 1: Nodes Not Joining Cluster
+
+**Symptoms**: Node group stuck in CREATE_FAILED
+
+**Solution**:
+```bash
+# Check node group status
+aws eks describe-nodegroup \
+  --cluster-name eks-demo-kartheepan-apse1-dev \
+  --nodegroup-name eks-demo-kartheepan-apse1-dev-general
+
+# Check EC2 instances
+aws ec2 describe-instances \
+  --filters "Name=tag:eks:cluster-name,Values=eks-demo-kartheepan-apse1-dev"
+
+# Verify security groups allow egress
+aws ec2 describe-security-groups --group-ids <sg-id>
+```
+
+#### Issue 2: Pods ImagePullBackOff
+
+**Symptoms**: Pods fail to pull image from ECR
+
+**Solution**:
+```bash
+# Check ECR repository exists
+aws ecr describe-repositories --repository-names eks-demo-app
+
+# Check image exists
+aws ecr describe-images --repository-name eks-demo-app
+
+# Verify pod events
+kubectl describe pod <pod-name>
+
+# Check deployment image URL
+kubectl get deployment eks-demo-app -o yaml | grep image:
+```
+
+#### Issue 3: Flux Not Deploying
+
+**Symptoms**: Changes pushed to Git but not applied to cluster
+
+**Solution**:
+```bash
+# Check Flux can access GitHub
+flux get sources git
+
+# Check for errors in logs
+kubectl logs -n flux-system deploy/kustomization-controller | tail -50
+
+# Force reconciliation
+flux reconcile source git eks-demo-repo
+flux reconcile kustomization eks-demo-kustomization --with-source
+
+# Check manifest syntax
+kubectl apply --dry-run=client -f app/deployment.yaml
+```
+
+#### Issue 4: Application Not Accessible
+
+**Symptoms**: Cannot access application via LoadBalancer or port-forward
+
+**Solution**:
+```bash
+# Check pods are running
+kubectl get pods -l app=eks-demo-app
+
+# Check service endpoints
+kubectl get endpoints eks-demo-app
+
+# Check ingress
+kubectl describe ingress eks-demo-app-ingress
+
+# Test directly to pod
+kubectl port-forward <pod-name> 8080:3000
+curl http://localhost:8080/health
+
+# Check security groups
+aws ec2 describe-security-groups --group-ids <sg-id>
+```
+
+### Rollback Deployment
+
+```bash
+# View rollout history
+kubectl rollout history deployment/eks-demo-app
+
+# Rollback to previous version
+kubectl rollout undo deployment/eks-demo-app
+
+# Rollback to specific revision
+kubectl rollout undo deployment/eks-demo-app --to-revision=2
+
+# Check rollout status
+kubectl rollout status deployment/eks-demo-app
 ```
 
 ---
 
 ## 💰 Cost Management
 
-### Estimated Monthly Costs (ap-southeast-1)
+### Cost Breakdown
 
 | Resource | Cost | Notes |
 |----------|------|-------|
-| EKS Control Plane | ~$72 | $0.10/hour |
-| NAT Gateway (2) | ~$64 | $0.045/hour each |
-| t3.medium nodes (2) | ~$60 | $0.042/hour each |
-| EBS volumes | ~$8 | 20GB per node |
-| **Total** | **~$204/month** | Without data transfer |
+| EKS Control Plane | ~$73/month | $0.10/hour, cannot be reduced |
+| Worker Nodes (2 x t3.small) | ~$30/month | Can use spot instances for 70% savings |
+| NAT Gateways (2) | ~$64/month | One per AZ for HA |
+| Data Transfer | Variable | Minimal for dev/test |
+| ECR Storage | ~$0.10/GB | Delete old images regularly |
+| **Total** | **~$170-200/month** | Dev environment estimate |
 
-### Cost Optimization Tips
+### Cost Optimization Strategies
 
-1. **Destroy when not in use**:
-   ```bash
-   terraform destroy
-   ```
-   You can recreate the cluster anytime with `terraform apply`.
+#### 1. Use Spot Instances
 
-2. **Disable NAT gateways** (for cost-sensitive learning):
-   - Set `enable_nat_gateway = false` in terraform.tfvars
-   - Use VPC endpoints for AWS services instead
-   - Or deploy nodes in public subnets (less secure)
+**Savings**: Up to 70% on worker nodes
 
-3. **Use Spot instances** for non-critical workloads:
-   - Configure spot node groups (already in tfvars)
-   - ~70% cheaper than on-demand
-   - Suitable for batch jobs, testing
+```hcl
+# In terraform.tfvars
+node_groups = {
+  general = {
+    capacity_type  = "SPOT"  # Change from ON_DEMAND
+    instance_types = ["t3.small", "t3a.small"]  # Multiple types
+  }
+}
+```
 
-4. **Right-size your nodes**:
-   - Start with t3.small ($30/month) instead of t3.medium
-   - Scale based on actual usage
+#### 2. Single NAT Gateway (Non-Production)
 
-5. **Set up AWS Budgets**:
-   ```bash
-   aws budgets create-budget \
-     --account-id $(aws sts get-caller-identity --query Account --output text) \
-     --budget file://budget.json
-   ```
+**Savings**: ~$32/month
 
-6. **Monitor with Cost Explorer**:
-   - Go to AWS Console → Cost Management → Cost Explorer
-   - Filter by tags (Project=eks-learning)
+```hcl
+# In terraform.tfvars
+enable_nat_gateway     = true
+single_nat_gateway     = true  # Add this line
+```
 
-### Cleanup Checklist
+⚠️ **Warning**: Reduces high availability
 
-Before destroying:
-- [ ] Export any important data
-- [ ] Take snapshots if needed
-- [ ] Verify no production workloads running
-- [ ] Run `terraform destroy`
-- [ ] Check AWS console for any orphaned resources
+#### 3. Destroy When Not in Use
+
+**Savings**: 100% when stopped
+
+```bash
+# Destroy all resources
+cd terraform/environments/dev
+terraform destroy -var-file=terraform.tfvars -auto-approve
+
+# Recreate when needed (takes ~15 minutes)
+terraform apply -var-file=terraform.tfvars -auto-approve
+```
+
+#### 4. Use Smaller Instances
+
+```hcl
+node_groups = {
+  general = {
+    instance_types = ["t3.micro"]  # Free tier eligible
+    # Note: May not have enough resources for multiple apps
+  }
+}
+```
+
+#### 5. ECR Lifecycle Policy
+
+```bash
+# Create lifecycle policy to delete old images
+cat > lifecycle-policy.json << 'EOF'
+{
+  "rules": [{
+    "rulePriority": 1,
+    "description": "Keep last 10 images",
+    "selection": {
+      "tagStatus": "any",
+      "countType": "imageCountMoreThan",
+      "countNumber": 10
+    },
+    "action": { "type": "expire" }
+  }]
+}
+EOF
+
+aws ecr put-lifecycle-policy \
+  --repository-name eks-demo-app \
+  --lifecycle-policy-text file://lifecycle-policy.json
+```
+
+#### 6. Set Budget Alerts
+
+```bash
+# Create budget alert for $200/month
+aws budgets create-budget \
+  --account-id $(aws sts get-caller-identity --query Account --output text) \
+  --budget file://budget.json
+
+# budget.json
+{
+  "BudgetName": "EKS-Dev-Budget",
+  "BudgetLimit": {
+    "Amount": "200",
+    "Unit": "USD"
+  },
+  "TimeUnit": "MONTHLY",
+  "BudgetType": "COST"
+}
+```
+
+### Daily Usage Pattern
+
+**Recommendation for learning/demos**:
+
+```bash
+# Morning: Deploy cluster
+terraform apply -var-file=terraform.tfvars -auto-approve
+
+# Work/demo during the day
+# ...
+
+# Evening: Destroy cluster
+terraform destroy -var-file=terraform.tfvars -auto-approve
+```
+
+**Cost**: ~$6-7/day vs ~$200/month
 
 ---
 
-## 🔍 Troubleshooting
+## 🎤 Interview Demo Guide
 
-### Common Issues and Solutions
-
-#### 1. Terraform Init Fails
-
-**Error**: `Error: Failed to download provider`
-
-**Solution**:
-```bash
-# Clear Terraform cache
-rm -rf .terraform .terraform.lock.hcl
-
-# Re-initialize
-terraform init
-```
-
-#### 2. AWS Credentials Not Found
-
-**Error**: `Error: No valid credential sources found`
-
-**Solution**:
-```bash
-# Configure AWS CLI
-aws configure
-
-# Or export environment variables
-export AWS_ACCESS_KEY_ID=your-key
-export AWS_SECRET_ACCESS_KEY=your-secret
-export AWS_DEFAULT_REGION=ap-southeast-1
-```
-
-#### 3. EKS Cluster Creation Timeout
-
-**Error**: `Timeout while waiting for EKS cluster to become ACTIVE`
-
-**Solution**:
-- This is usually fine, just wait 15-20 minutes
-- Check AWS Console → EKS → Clusters
-- If stuck for >30 minutes, check IAM permissions
-
-#### 4. kubectl Can't Connect to Cluster
-
-**Error**: `Unable to connect to the server`
-
-**Solution**:
-```bash
-# Update kubeconfig
-aws eks update-kubeconfig --region ap-southeast-1 --name eks-learning-dev
-
-# Verify AWS credentials
-aws sts get-caller-identity
-
-# Check cluster status
-aws eks describe-cluster --name eks-learning-dev --region ap-southeast-1
-```
-
-#### 5. Flux Bootstrap Fails
-
-**Error**: `authentication required` or `permission denied`
-
-**Solution**:
-```bash
-# Verify GitHub token has 'repo' scope
-echo $GITHUB_TOKEN
-
-# Re-create token if needed
-# Ensure FLUX_GITHUB_TOKEN secret is added to GitHub Actions
-```
-
-#### 6. Nodes Not Joining Cluster
-
-**Error**: No nodes shown with `kubectl get nodes`
-
-**Solution**:
-- Node groups may not be fully implemented in the EKS module
-- Check AWS Console → EKS → Cluster → Compute
-- Verify subnet tags include `kubernetes.io/cluster/<cluster-name> = shared`
-
-#### 7. GitHub Actions Workflow Fails
-
-**Error**: `Error: No value for required variable`
-
-**Solution**:
-- Ensure `terraform.tfvars` is committed to the repository
-- Check that `.gitignore` doesn't exclude `terraform.tfvars`
-- Verify GitHub Secrets are configured correctly
-
-### Debugging Commands
+### 5-Minute Demo Script
 
 ```bash
-# Terraform debugging
-export TF_LOG=DEBUG
-terraform plan
+# 1. Show Current State (30 seconds)
+kubectl get pods -l app=eks-demo-app
+kubectl port-forward svc/eks-demo-app 8080:80 &
+curl http://localhost:8080/api/info
 
-# Check Terraform state
-terraform show
-terraform state list
+# 2. Make Code Change (1 minute)
+cd sample-app
+cat server.js
+echo 'console.log("Interview demo!");' >> server.js
 
-# AWS EKS debugging
-aws eks describe-cluster --name eks-learning-dev --region ap-southeast-1
+# 3. Commit and Push (30 seconds)
+git add sample-app/server.js
+git commit -m "Demo: Add logging for interview"
+git push origin main
 
-# Kubernetes debugging
-kubectl get events --all-namespaces
-kubectl logs -n kube-system <pod-name>
-kubectl describe node <node-name>
+# 4. Show GitHub Actions (1 minute)
+# Open browser: https://github.com/Kartheepan1991/eks-setup-terraform/actions
+# Point out: Test → Build → Push → Update Manifest jobs
 
-# Flux debugging
-flux check
-flux logs
-kubectl logs -n flux-system deploy/source-controller
+# 5. Show Flux Reconciliation (1 minute)
+flux get kustomizations --watch
+# Shows: Reconciling... → Applied
+
+# 6. Watch Rolling Update (1 minute)
+kubectl get pods -l app=eks-demo-app -w
+# Shows: New pods starting, old pods terminating
+
+# 7. Verify New Version (30 seconds)
+curl http://localhost:8080/
+# Point out updated version or changes
 ```
+
+### Interview Talking Points
+
+#### Architecture
+
+- **"Built production-ready EKS infrastructure using Terraform modules"**
+  - VPC with public/private subnets across 2 AZs
+  - NAT gateways for private subnet internet access
+  - Managed node groups with autoscaling
+  - Security groups following least-privilege principle
+
+#### CI/CD
+
+- **"Implemented complete GitOps workflow with GitHub Actions and Flux CD"**
+  - GitHub Actions handles CI: test, build, push to ECR
+  - Flux CD handles CD: watches Git, applies to cluster
+  - Total pipeline time: 5-6 minutes commit-to-production
+  - Automated testing gates production deployments
+
+#### Kubernetes
+
+- **"Configured zero-downtime deployments with health probes"**
+  - Rolling updates with maxUnavailable: 0
+  - Liveness and readiness probes
+  - Resource requests/limits for stability
+  - Horizontal pod autoscaling capability
+
+#### Security
+
+- **"Followed container security best practices"**
+  - Multi-stage Docker builds (reduced image size 70%)
+  - Non-root containers (UID 1001)
+  - ECR vulnerability scanning enabled
+  - Security contexts on pods
+  - IAM roles for service accounts (IRSA)
+
+#### GitOps
+
+- **"Git as single source of truth for infrastructure and applications"**
+  - Infrastructure changes via Terraform
+  - Application deployments via Flux
+  - Audit trail through Git commits
+  - Easy rollback with Git revert
+
+### Key Metrics to Mention
+
+- **Deployment Speed**: 5-6 minutes from commit to production
+- **Uptime**: Zero-downtime deployments
+- **Image Size**: 70% smaller with multi-stage builds
+- **Cost**: Optimized to ~$170-200/month for dev
+- **Recovery Time**: Flux auto-heals within 1 minute
+
+### Questions to Expect
+
+**Q: Why Flux instead of ArgoCD?**  
+A: Flux is lightweight, GitOps-native, and integrates seamlessly with GitHub. It's pull-based (more secure), has automatic image updates, and is CNCF graduated project.
+
+**Q: How do you handle secrets?**  
+A: Currently using GitHub Secrets for CI/CD. For production, I'd use AWS Secrets Manager or Sealed Secrets with Flux, plus IRSA for pod-level AWS access.
+
+**Q: What about monitoring?**  
+A: This demo focuses on infrastructure and CI/CD. Next steps would be Prometheus/Grafana for metrics, EFK stack for logging, and Jaeger for tracing.
+
+**Q: How do you handle multiple environments?**  
+A: Terraform workspace separation (dev/staging/prod), separate tfvars files, and Flux Kustomize overlays for environment-specific configs.
+
+**Q: What's your disaster recovery strategy?**  
+A: Terraform state in S3 with versioning, Git history for rollbacks, EKS automated backups, and multi-AZ deployment for HA.
 
 ---
 
 ## 🧹 Cleanup
 
-### Complete Infrastructure Teardown
+### Destroy All Resources
 
-1. **Navigate to environment directory**:
-   ```bash
-   cd terraform/environments/dev
-   ```
-
-2. **Destroy all resources**:
-   ```bash
-   terraform destroy
-   ```
-
-3. **Confirm destruction**:
-   - Review the list of resources to be destroyed
-   - Type `yes` when prompted
-
-4. **Verify cleanup**:
-   ```bash
-   # Check AWS Console for any remaining resources
-   aws eks list-clusters --region ap-southeast-1
-   aws ec2 describe-vpcs --region ap-southeast-1
-   ```
-
-**Time estimate**: 5-10 minutes
-
-**Cost after cleanup**: $0 (assuming all resources destroyed)
-
-### Partial Cleanup Options
-
-**Delete only worker nodes** (keep cluster):
 ```bash
-# Remove node groups from terraform.tfvars
-# Run terraform apply
+# 1. Delete Kubernetes resources first (optional)
+kubectl delete -f app/
+
+# 2. Uninstall Flux (optional)
+flux uninstall --silent
+
+# 3. Destroy Terraform infrastructure
+cd terraform/environments/dev
+terraform destroy -var-file=terraform.tfvars -auto-approve
+
+# This removes:
+# - EKS cluster and node groups
+# - VPC, subnets, NAT gateways
+# - Security groups
+# - IAM roles and policies
 ```
 
-**Delete NAT gateways** (reduce cost by ~$64/month):
+### Delete ECR Repository
+
 ```bash
-# Set enable_nat_gateway = false in terraform.tfvars
-# Run terraform apply
+# Delete all images and repository
+aws ecr delete-repository \
+  --repository-name eks-demo-app \
+  --force \
+  --region ap-southeast-1
 ```
+
+### Verify Cleanup
+
+```bash
+# Check EKS clusters
+aws eks list-clusters --region ap-southeast-1
+
+# Check VPCs
+aws ec2 describe-vpcs --region ap-southeast-1 | grep eks-demo
+
+# Check ECR repositories
+aws ecr describe-repositories --region ap-southeast-1
+```
+
+### Estimated Time
+
+- Kubernetes resource deletion: ~2 minutes
+- Terraform destroy: ~10-15 minutes
+- Total cleanup: ~15-20 minutes
 
 ---
 
-## 📚 Additional Resources
-
-### Official Documentation
-
-- [AWS EKS Documentation](https://docs.aws.amazon.com/eks/)
-- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
-- [Flux CD Documentation](https://fluxcd.io/docs/)
-- [Kubernetes Documentation](https://kubernetes.io/docs/)
-
-### Learning Resources
-
-- [EKS Best Practices Guide](https://aws.github.io/aws-eks-best-practices/)
-- [CKA Exam Curriculum](https://github.com/cncf/curriculum)
-- [Terraform Best Practices](https://www.terraform-best-practices.com/)
-
-### Useful kubectl Commands
-
-```bash
-# Cluster information
-kubectl cluster-info
-kubectl get nodes -o wide
-kubectl describe node <node-name>
-
-# Workload management
-kubectl get pods --all-namespaces
-kubectl get services --all-namespaces
-kubectl get deployments --all-namespaces
-
-# Troubleshooting
-kubectl logs <pod-name> -n <namespace>
-kubectl describe pod <pod-name> -n <namespace>
-kubectl top nodes
-kubectl top pods --all-namespaces
-
-# Flux operations
-flux get sources git
-flux get kustomizations
-flux reconcile source git eks-demo-repo
-flux logs --follow
-```
-
 ---
-
-## 🤝 Contributing
 
 This project is designed for learning and demonstration. Feel free to:
+
 - Fork and experiment
-- Add new features (monitoring, service mesh, etc.)
+- Add features (monitoring, service mesh, etc.)
 - Improve documentation
 - Share feedback via issues
 
@@ -1319,18 +1326,73 @@ This project is designed for learning and demonstration. Feel free to:
 
 ## 📄 License
 
-This project is open source and available under the MIT License.
+This project is open source and available under the [MIT License](LICENSE).
 
 ---
 
 ## 👤 Author
 
 **Kartheepan**
+
 - GitHub: [@Kartheepan1991](https://github.com/Kartheepan1991)
 - Repository: [eks-setup-terraform](https://github.com/Kartheepan1991/eks-setup-terraform)
+
+---
+
+## 🔗 Additional Resources
+
+### Documentation
+- [AWS EKS Best Practices](https://aws.github.io/aws-eks-best-practices/)
+- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+- [Flux CD Documentation](https://fluxcd.io/docs/)
+- [Kubernetes Documentation](https://kubernetes.io/docs/)
+
+### Tutorials
+- [EKS Workshop](https://www.eksworkshop.com/)
+- [Terraform Tutorials](https://developer.hashicorp.com/terraform/tutorials)
+- [GitOps with Flux](https://fluxcd.io/flux/get-started/)
 
 ---
 
 **Happy Learning! 🚀**
 
 *Last Updated: November 2025*
+
+---
+
+## Quick Command Reference
+
+```bash
+# Terraform
+terraform init
+terraform plan -var-file=terraform.tfvars
+terraform apply -var-file=terraform.tfvars
+terraform destroy -var-file=terraform.tfvars
+
+# kubectl
+kubectl get nodes
+kubectl get pods -A
+kubectl get svc -A
+kubectl logs -f <pod-name>
+kubectl describe pod <pod-name>
+
+# Flux
+flux check
+flux get all
+flux get kustomizations --watch
+flux reconcile kustomization <name> --with-source
+
+# AWS
+aws eks update-kubeconfig --region ap-southeast-1 --name <cluster-name>
+aws eks list-clusters
+aws ecr describe-repositories
+
+# Docker (Local)
+docker build -t eks-demo-app:local sample-app/
+docker run -p 3000:3000 eks-demo-app:local
+curl http://localhost:3000/health
+```
+
+---
+
+*This project demonstrates a complete end-to-end DevOps workflow suitable for production environments, interviews, and portfolio showcases.*

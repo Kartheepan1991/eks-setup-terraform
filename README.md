@@ -168,8 +168,10 @@ This project demonstrates a **complete DevOps workflow** for deploying and manag
 
 ---
 
-## 📁 Project Structure
+#### NAT Gateway Configuration
 
+```hcl
+enable_nat_gateway = true   # Set to false to save ~$64/month
 ```
 eks-terraform-project/
 │
@@ -366,11 +368,13 @@ sed -i "s/311719319684/${AWS_ACCOUNT_ID}/g" app/deployment.yaml
 
 ### 4. Deploy Infrastructure
 
+**Solution**:
 ```bash
 cd terraform/environments/dev
 
-# Initialize Terraform
+# Re-initialize
 terraform init
+```
 
 # Review plan
 terraform plan -var-file=terraform.tfvars
@@ -381,6 +385,11 @@ terraform apply -var-file=terraform.tfvars
 
 ### 5. Configure kubectl
 
+#### 4. kubectl Can't Connect to Cluster
+
+**Error**: `Unable to connect to the server`
+
+**Solution**:
 ```bash
 # Get kubeconfig
 aws eks update-kubeconfig \
@@ -808,7 +817,9 @@ curl http://eks-demo.local/
 
 ## ⚙️ Configuration
 
-### Node Groups
+# Check Terraform state
+terraform show
+terraform state list
 
 Modify node group settings in `terraform/environments/dev/terraform.tfvars`:
 
@@ -1302,7 +1313,7 @@ aws ecr describe-repositories --region ap-southeast-1
 
 ---
 
-## 🤝 Contributing
+---
 
 This project is designed for learning and demonstration. Feel free to:
 

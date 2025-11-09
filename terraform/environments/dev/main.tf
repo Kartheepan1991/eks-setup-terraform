@@ -30,6 +30,7 @@ locals {
 module "vpc" {
   source = "../../modules/vpc"
   vpc_name               = local.vpc_name
+  cluster_name           = local.cluster_name
   vpc_cidr               = var.vpc_cidr
   availability_zones     = var.availability_zones
   enable_nat_gateway     = var.enable_nat_gateway

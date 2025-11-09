@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       AWS_REGION: ap-southeast-1
-      EKS_CLUSTER_NAME: eks-learning-dev # Change to your actual cluster name
+      EKS_CLUSTER_NAME: eks-demo-kartheepan-apse1-dev # Change to your actual cluster name
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -34,6 +34,8 @@ jobs:
           curl -s https://fluxcd.io/install.sh | sudo bash
 
       - name: Bootstrap Flux to EKS
+        env:
+          GITHUB_TOKEN: ${{ secrets.FLUX_GITHUB_TOKEN }}
         run: |
           flux bootstrap github \
             --owner=Kartheepan1991 \

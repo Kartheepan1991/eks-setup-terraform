@@ -12,7 +12,7 @@ endpoint_public_access_cidrs = ["0.0.0.0/0"]  # Replace with your IP: ["YOUR_IP/
 
 node_groups = {
   general = {
-    desired_capacity = 2
+    desired_capacity = 1
     max_capacity     = 4
     min_capacity     = 1
     instance_types   = ["t3.small"]  # Changed from t3.medium (Free tier compatible)

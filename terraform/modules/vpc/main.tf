@@ -22,7 +22,7 @@ resource "aws_vpc" "main" {
     {
       Name = var.vpc_name
       # These tags are required for EKS
-      "kubernetes.io/cluster/${var.vpc_name}-cluster" = "shared"
+      "kubernetes.io/cluster/${var.cluster_name}" = "shared"
     }
   )
 }
@@ -54,8 +54,8 @@ resource "aws_subnet" "public" {
       Name = "${var.vpc_name}-public-${var.availability_zones[count.index]}"
       Type = "public"
       # EKS requires these tags for load balancer subnet discovery
-      "kubernetes.io/cluster/${var.vpc_name}-cluster" = "shared"
-      "kubernetes.io/role/elb"                        = "1"
+      "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+      "kubernetes.io/role/elb"                    = "1"
     }
   )
   # ...existing code continues...
@@ -74,7 +74,7 @@ resource "aws_subnet" "public" {
       {
         Name = "${var.vpc_name}-private-${var.availability_zones[count.index]}"
         Type = "private"
-        "kubernetes.io/cluster/${var.vpc_name}-cluster" = "shared"
+        "kubernetes.io/cluster/${var.cluster_name}" = "shared"
         "kubernetes.io/role/internal-elb" = "1"
       }
     )
@@ -100,11 +100,40 @@ resource "aws_nat_gateway" "main" {
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
   tags   = merge(local.common_tags, { Name = "${var.vpc_name}-public-rt" })
-  }
+}
 
-  # Private route tables
-  resource "aws_route_table" "private" {
-    count  = length(var.private_subnet_cidrs)
-    vpc_id = aws_vpc.main.id
-    tags   = merge(local.common_tags, { Name = "${var.vpc_name}-private-rt-${count.index}" })
-  }
+# Private route tables
+resource "aws_route_table" "private" {
+  count  = length(var.private_subnet_cidrs)
+  vpc_id = aws_vpc.main.id
+  tags   = merge(local.common_tags, { Name = "${var.vpc_name}-private-rt-${count.index}" })
+}
+
+# Route for public subnets to access internet via Internet Gateway
+resource "aws_route" "public_internet_gateway" {
+  route_table_id         = aws_route_table.public.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.main.id
+}
+
+# Routes for private subnets to access internet via NAT Gateway
+resource "aws_route" "private_nat_gateway" {
+  count                  = var.enable_nat_gateway ? length(var.private_subnet_cidrs) : 0
+  route_table_id         = aws_route_table.private[count.index].id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.main[count.index].id
+}
+
+# Associate public subnets with public route table
+resource "aws_route_table_association" "public" {
+  count          = length(var.public_subnet_cidrs)
+  subnet_id      = aws_subnet.public[count.index].id
+  route_table_id = aws_route_table.public.id
+}
+
+# Associate private subnets with private route tables
+resource "aws_route_table_association" "private" {
+  count          = length(var.private_subnet_cidrs)
+  subnet_id      = aws_subnet.private[count.index].id
+  route_table_id = aws_route_table.private[count.index].id
+}

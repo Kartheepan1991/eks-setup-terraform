@@ -2,13 +2,14 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, feature/eks-infrastructure-setup ]
     paths:
       - 'sample-app/**'
   pull_request:
     branches: [ main ]
     paths:
       - 'sample-app/**'
+  workflow_dispatch:
 
 env:
   AWS_REGION: ap-southeast-1

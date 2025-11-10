@@ -8,8 +8,7 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-    - host: eks-demo.local
-      http:
+    - http:
         paths:
           - path: /
             pathType: Prefix

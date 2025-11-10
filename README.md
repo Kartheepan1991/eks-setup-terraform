@@ -1,6 +1,6 @@
 # AWS EKS Infrastructure with Terraform & GitOps
 
-Production-ready AWS EKS cluster with Terraform IaC, Flux CD GitOps, and automated CI/CD pipeline.
+Complete end-to-end DevOps pipeline: Infrastructure as Code → CI/CD → GitOps → Production Deployment
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Terraform](https://img.shields.io/badge/Terraform-1.0+-purple)](https://www.terraform.io/)
@@ -8,46 +8,78 @@ Production-ready AWS EKS cluster with Terraform IaC, Flux CD GitOps, and automat
 
 ---
 
-## 🎯 Overview
+## 🎯 What This Project Demonstrates
 
-End-to-end DevOps project demonstrating Infrastructure as Code, containerization, CI/CD automation, and GitOps deployment on AWS EKS.
+**Complete DevOps pipeline from code to production:**
 
-**Tech Stack:** Terraform | AWS EKS | Kubernetes | Flux CD | GitHub Actions | Docker | Node.js
+✅ **Infrastructure as Code** - Terraform modules for VPC, EKS, IAM  
+✅ **Containerization** - Multi-stage Docker builds with security best practices  
+✅ **CI/CD Automation** - GitHub Actions (test → build → push → deploy)  
+✅ **GitOps Deployment** - Flux CD syncing from Git  
+✅ **Production Features** - Zero-downtime rolling updates, health checks, auto-scaling  
+✅ **External Access** - NGINX Ingress with AWS Network LoadBalancer  
 
-**Key Features:**
-- Modular Terraform infrastructure (VPC, EKS, IAM)
-- Automated CI/CD pipeline with testing and container scanning
-- GitOps deployment using Flux CD
-- Zero-downtime rolling updates
-- Multi-AZ high availability
+**Tech Stack:** Terraform | AWS EKS | Kubernetes | Flux CD | GitHub Actions | Docker | NGINX | Node.js
 
 ---
 
 ## 🏗️ Architecture
 
+### Infrastructure Layer
 ```
-┌───────────────────────────────────────────────────────────────────┐
-│                     AWS Cloud (ap-southeast-1)                    │
-│                                                                   │
-│  ┌─────────────────────────────────────────────────────────────┐ │
-│  │ VPC (10.0.0.0/16)                                           │ │
-│  │                                                             │ │
-│  │  ┌──────────────┐              ┌──────────────┐            │ │
-│  │  │ Public A     │              │ Public B     │            │ │
-│  │  │ NAT Gateway  │              │ NAT Gateway  │            │ │
-│  │  └──────┬───────┘              └──────┬───────┘            │ │
-│  │         │                             │                    │ │
-│  │  ┌──────▼───────┐              ┌──────▼───────┐            │ │
-│  │  │ Private A    │              │ Private B    │            │ │
-│  │  │              │              │              │            │ │
-│  │  │ ┌──────────┐ │              │ ┌──────────┐ │            │ │
-│  │  │ │EKS Worker│ │              │ │EKS Worker│ │            │ │
-│  │  │ │t3.small  │ │              │ │t3.small  │ │            │ │
-│  │  │ └──────────┘ │              │ └──────────┘ │            │ │
-│  │  └──────────────┘              └──────────────┘            │ │
-│  │                                                             │ │
-│  │  ┌──────────────────────────────────────────────────────┐  │ │
-│  │  │     EKS Control Plane (v1.31) - AWS Managed          │  │ │
+┌─────────────────────────────────────────────────────────────┐
+│                  AWS Cloud (ap-southeast-1)                 │
+│                                                             │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │ VPC (10.0.0.0/16)                                      │ │
+│  │                                                         │ │
+│  │  Public Subnets (2 AZs)         Private Subnets (2 AZs)│ │
+│  │  ├─ NAT Gateway A                ├─ EKS Worker Nodes   │ │
+│  │  └─ NAT Gateway B                └─ t3.small instances │ │
+│  │                                                         │ │
+│  │  ┌──────────────────────────────────────────────────┐  │ │
+│  │  │ EKS Control Plane (v1.31) - Managed by AWS       │  │ │
+│  │  └──────────────────────────────────────────────────┘  │ │
+│  └────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### CI/CD Pipeline Flow
+```
+Developer Commits Code
+        ↓
+GitHub Repository (feature branch)
+        ↓
+GitHub Actions Workflow Triggered
+        ↓
+    ┌───────────────────────────────┐
+    │ 1. Run Tests (Jest)           │
+    │ 2. Build Docker Image         │
+    │ 3. Push to Amazon ECR         │
+    │ 4. Update K8s Manifest (Git)  │
+    └───────────────────────────────┘
+        ↓
+Flux CD Detects Manifest Change (1min sync)
+        ↓
+Pulls New Image from ECR
+        ↓
+Rolling Update in EKS (Zero Downtime)
+        ↓
+Application Live via NGINX Ingress + AWS LoadBalancer
+```
+
+### Traffic Flow
+```
+Internet
+   ↓
+AWS Network LoadBalancer
+   ↓
+NGINX Ingress Controller
+   ↓
+Kubernetes Service
+   ↓
+Application Pods (2 replicas)
+```
 │  │  └──────────────────────────────────────────────────────┘  │ │
 │  └─────────────────────────────────────────────────────────────┘ │
 └───────────────────────────────────────────────────────────────────┘
@@ -65,11 +97,6 @@ End-to-end DevOps project demonstrating Infrastructure as Code, containerization
                                               └──────────────┘
 ```
 
-**Deployment Flow:**
-1. Developer pushes code → GitHub
-2. GitHub Actions → Test → Build → Push to ECR → Update manifest
-3. Flux CD → Detects change → Deploys to EKS (Rolling Update)
-4. Live in ~5-6 minutes with zero downtime
 
 ---
 
@@ -77,41 +104,35 @@ End-to-end DevOps project demonstrating Infrastructure as Code, containerization
 
 ```
 eks-terraform-project/
-├── terraform/
-│   ├── modules/
-│   │   ├── vpc/              # VPC, subnets, NAT, IGW
-│   │   └── eks/              # EKS cluster, nodes, IAM
-│   └── environments/dev/     # Environment config
+├── terraform/environments/dev/
+│   ├── main.tf              # Calls VPC + EKS modules
+│   ├── terraform.tfvars     # Configuration values
+│   └── variables.tf
 │
-├── sample-app/               # Node.js application
+├── sample-app/              # Node.js application source
 │   ├── server.js
-│   ├── Dockerfile
-│   └── server.test.js
+│   ├── Dockerfile           # Multi-stage build
+│   └── server.test.js       # Jest tests
 │
-├── app/                      # K8s manifests (Flux deploys)
-│   ├── deployment.yaml
-│   ├── service.yaml
-│   └── ingress.yaml
+├── app/                     # Kubernetes manifests
+│   ├── deployment.yaml      # App deployment
+│   ├── service.yaml         # ClusterIP service
+│   └── ingress.yaml         # NGINX ingress
 │
-├── flux/                     # GitOps configuration
-│   └── flux-bootstrap.yaml
+├── flux/                    # Flux CD configuration
+│   ├── flux-bootstrap.yaml  # GitOps setup
+│   └── nginx-ingress-helmrelease.yaml  # NGINX via Helm
 │
 └── .github/workflows/
-    └── ci-cd.yml             # CI/CD pipeline
+    ├── ci-cd.yml            # CI/CD pipeline
+    └── flux-bootstrap.yaml  # Flux bootstrap workflow
 ```
 
 ---
 
-## 🚀 Quick Start
+## � Complete Deployment Steps
 
-### Prerequisites
-- AWS CLI configured
-- Terraform >= 1.0
-- kubectl
-- Flux CLI
-- GitHub account
-
-### 1. Deploy Infrastructure
+### Step 1: Deploy EKS Infrastructure
 
 ```bash
 cd terraform/environments/dev
@@ -120,52 +141,112 @@ terraform plan
 terraform apply -auto-approve
 ```
 
-### 2. Configure kubectl
+**Creates:**
+- VPC with public/private subnets across 2 AZs
+- NAT Gateways for private subnet internet access
+- EKS cluster (v1.31) with managed control plane
+- EKS node group (t3.small, min=1, max=3)
+- IAM roles and security groups
+
+**Time:** ~15 minutes
+
+### Step 2: Configure kubectl
 
 ```bash
 aws eks update-kubeconfig --region ap-southeast-1 --name eks-demo-kartheepan-apse1-dev
 kubectl get nodes
 ```
 
-### 3. Setup GitHub Secrets
+### Step 3: Setup GitHub Secrets
 
-In GitHub repo: `Settings → Secrets and variables → Actions`
+Go to: `GitHub repo → Settings → Secrets and variables → Actions`
 
-Add:
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
-- `AWS_REGION`: `ap-southeast-1`
-- `EKS_CLUSTER_NAME`: `eks-demo-kartheepan-apse1-dev`
-- `ECR_REPOSITORY`: `eks-demo-app`
+Add these secrets:
+- `AWS_ACCESS_KEY_ID` - Your AWS access key
+- `AWS_SECRET_ACCESS_KEY` - Your AWS secret key
+- `AWS_REGION` - `ap-southeast-1`
+- `EKS_CLUSTER_NAME` - `eks-demo-kartheepan-apse1-dev`
+- `ECR_REPOSITORY` - `eks-demo-app`
+- `FLUX_GITHUB_TOKEN` - GitHub Personal Access Token (with `repo` + `workflow` scopes)
 
-### 4. Bootstrap Flux CD
+### Step 4: Bootstrap Flux CD
 
+**Via GitHub Actions Workflow:**
+
+1. Go to: `Actions → Flux Bootstrap to EKS`
+2. Click "Run workflow"
+3. Select your branch
+4. Wait ~3-5 minutes
+
+**Or manually:**
 ```bash
 export GITHUB_TOKEN=<your-github-token>
 
 flux bootstrap github \
   --owner=Kartheepan1991 \
   --repository=eks-setup-terraform \
-  --branch=main \
-  --path=flux \
+  --branch=feature/eks-infrastructure-setup \
+  --path=./flux \
   --personal
+```
 
-# Verify
+**Verify:**
+```bash
 flux check
 kubectl get pods -n flux-system
 ```
 
-### 5. Deploy Application
+### Step 5: Trigger CI/CD Pipeline
 
-Flux automatically deploys from `app/` directory.
+Make a change to trigger the pipeline:
 
 ```bash
-# Watch deployment
-kubectl get deployments -w
+cd sample-app
+echo "// Trigger build" >> server.js
+git add .
+git commit -m "Trigger CI/CD pipeline"
+git push
+```
 
-# Test application
+**Pipeline runs automatically:**
+1. ✅ Run tests (Jest)
+2. ✅ Build Docker image
+3. ✅ Push to Amazon ECR
+4. ✅ Update deployment.yaml with new image tag
+5. ✅ Flux detects change and deploys
+
+**Time:** ~3-5 minutes
+
+### Step 6: Install NGINX Ingress (Optional)
+
+Flux automatically deploys NGINX Ingress from `flux/nginx-ingress-helmrelease.yaml`
+
+**Or manually:**
+```bash
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/aws/deploy.yaml
+```
+
+**Wait for LoadBalancer:**
+```bash
+kubectl get svc -n ingress-nginx
+```
+
+### Step 7: Access Your Application
+
+**Get LoadBalancer URL:**
+```bash
+kubectl get ingress eks-demo-app-ingress
+```
+
+**Test in browser:**
+```
+http://<loadbalancer-url>/
+```
+
+**Or via kubectl port-forward:**
+```bash
 kubectl port-forward svc/eks-demo-app 8080:80
-curl http://localhost:8080/health
+curl http://localhost:8080/
 ```
 
 ---
@@ -178,11 +259,10 @@ curl http://localhost:8080/health
 
 ```hcl
 project_name       = "eks-demo-kartheepan-apse1"
-environment        = "dev"
 region             = "ap-southeast-1"
-vpc_cidr           = "10.0.0.0/16"
 cluster_version    = "1.31"
-enable_nat_gateway = true
+vpc_cidr           = "10.0.0.0/16"
+availability_zones = ["ap-southeast-1a", "ap-southeast-1b"]
 
 node_groups = {
   general = {
@@ -190,8 +270,7 @@ node_groups = {
     desired_size   = 1
     min_size       = 1
     max_size       = 3
-    capacity_type  = "ON_DEMAND"  # or "SPOT"
-    disk_size      = 20
+    capacity_type  = "ON_DEMAND"  # or "SPOT" for cost savings
   }
 }
 ```
@@ -200,58 +279,69 @@ node_groups = {
 
 **Monthly Cost Estimate:**
 - EKS Control Plane: ~$73
-- Worker Nodes (2x t3.small): ~$30
+- Worker Nodes (1x t3.small): ~$15
 - NAT Gateways (2x): ~$64
-- **Total: ~$175/month**
+- **Total: ~$155/month**
 
-**To Reduce Costs:**
-1. Set `enable_nat_gateway = false` → Save $64/month
-2. Use `capacity_type = "SPOT"` → Save ~70% on nodes
-3. Scale down: `desired_size = 0`
-4. Destroy when not in use: `terraform destroy`
+**To reduce costs:**
+- Set `capacity_type = "SPOT"` (save ~70%)
+- Scale to 0 when not in use: `desired_size = 0`
+- Use single NAT gateway (reduces HA)
+- Destroy infrastructure: `terraform destroy`
 
 ---
 
-## 🔍 Troubleshooting
+## � Monitoring & Verification
 
-### View Logs
+### Check Application Status
 
 ```bash
-# Application logs
+# Pods
+kubectl get pods -l app=eks-demo-app
+
+# Service
+kubectl get svc eks-demo-app
+
+# Ingress
+kubectl get ingress
+
+# Logs
 kubectl logs -f deployment/eks-demo-app
-
-# Flux logs
-kubectl logs -n flux-system deploy/kustomization-controller -f
-
-# Check pod status
-kubectl describe pod <pod-name>
 ```
 
-### Common Issues
+### Check Flux Sync Status
 
-**Nodes not joining cluster:**
 ```bash
-kubectl get configmap aws-auth -n kube-system -o yaml
-```
+# Overall status
+flux get all
 
-**ImagePullBackOff:**
-```bash
-aws ecr describe-repositories --repository-names eks-demo-app
-kubectl describe pod <pod-name>
-```
-
-**Flux not syncing:**
-```bash
+# Git repository sync
 flux get sources git
+
+# Kustomizations
+flux get kustomizations
+
+# Force reconciliation
 flux reconcile kustomization eks-demo-kustomization --with-source
 ```
+
+### Application Endpoints
+
+- `GET /` - Welcome message
+- `GET /health` - Health check
+- `GET /api/info` - Application metadata
 
 ---
 
 ## 🧹 Cleanup
 
+### Destroy Everything
+
 ```bash
-# Destroy infrastructure
+# Delete Flux
+flux uninstall
+
+# Destroy EKS cluster and infrastructure
 cd terraform/environments/dev
 terraform destroy -auto-approve
 
@@ -259,41 +349,34 @@ terraform destroy -auto-approve
 aws ecr delete-repository --repository-name eks-demo-app --force
 ```
 
+**Important:** This stops all AWS charges.
+
 ---
 
 ## 📖 What You've Built
 
-✅ **Infrastructure as Code:** Modular Terraform (VPC, EKS, IAM)  
-✅ **Container Orchestration:** Kubernetes with health checks  
-✅ **CI/CD Automation:** GitHub Actions pipeline  
-✅ **GitOps:** Flux CD declarative deployment  
-✅ **Production Practices:** Rolling updates, resource limits, security  
-✅ **AWS Services:** EKS, ECR, VPC, IAM, CloudWatch
+✅ **Production-grade EKS infrastructure** with Terraform modules  
+✅ **Complete CI/CD pipeline** with automated testing and deployment  
+✅ **GitOps workflow** with Flux CD  
+✅ **Containerized application** with multi-stage Docker builds  
+✅ **External access** via NGINX Ingress and AWS LoadBalancer  
+✅ **Zero-downtime deployments** with rolling updates  
+✅ **Production features** - Health checks, resource limits, autoscaling  
 
-**Perfect for:** DevOps interviews, portfolio, learning Kubernetes/AWS
+**Perfect for:** DevOps portfolios, interviews, learning Kubernetes/AWS
 
 ---
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file
+MIT License - see [LICENSE](LICENSE)
 
 ---
 
 ## 👤 Author
 
 **Kartheepan**  
-GitHub: [@Kartheepan1991](https://github.com/Kartheepan1991)  
-Repository: [eks-setup-terraform](https://github.com/Kartheepan1991/eks-setup-terraform)
-
----
-
-## 🔗 Resources
-
-- [AWS EKS Best Practices](https://aws.github.io/aws-eks-best-practices/)
-- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
-- [Flux CD Documentation](https://fluxcd.io/docs/)
-- [Kubernetes Documentation](https://kubernetes.io/docs/)
+GitHub: [@Kartheepan1991](https://github.com/Kartheepan1991)
 
 ---
 

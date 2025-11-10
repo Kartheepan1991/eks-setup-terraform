@@ -40,6 +40,6 @@ jobs:
           flux bootstrap github \
             --owner=Kartheepan1991 \
             --repository=eks-setup-terraform \
-            --branch=main \
+            --branch=${{ github.ref_name }} \
             --path=./flux \
             --personal
